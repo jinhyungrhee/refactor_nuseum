@@ -1,17 +1,18 @@
 from django.db import models
 
-class Category(models.Model):
-  name = models.CharField(max_length=30)
+# class Category(models.Model):
+#   name = models.CharField(max_length=30)
 
-  def __str__(self):
-    return self.name
+#   def __str__(self):
+#     return self.name
 
-  class Meta:
-    verbose_name_plural = 'categories'
+#   class Meta:
+#     verbose_name_plural = 'categories'
 
 class Food(models.Model):
   name = models.CharField(max_length=200)
-  category = models.ManyToManyField(Category, blank=True) # 중간테이블 생성 필요?
+  # category = models.ManyToManyField(Category, blank=True) # 중간테이블 생성 필요?
+  category = models.CharField(max_length=30, blank=True)
 
   energy = models.FloatField(default=0.0)
   protein = models.FloatField(default=0.0)
@@ -32,4 +33,4 @@ class Food(models.Model):
 
   def __str__(self):
     # return f'{self.pk}, {self.name}' # 프론트에서 pk가 필요하면 이것 사용
-    return f'{self.name}' # 그렇지 않으면 이름만 사용
+    return f'{self.name} :: {self.category}' # 그렇지 않으면 이름만 사용
