@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 from pathlib import Path
 import os, json
 from django.core.exceptions import ImproperlyConfigured
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,24 +23,30 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-secret_file = os.path.join(BASE_DIR, 'secrets.json')
+# DEV VERSION
 
-with open(secret_file) as f:
-    secrets = json.loads(f.read())
+# secret_file = os.path.join(BASE_DIR, 'secrets.json')
 
-def get_secret(setting):
-    try:
-        return secrets[setting]
-    except KeyError:
-        error_msg = "Set the {} environment variable".format(setting)
-        raise ImproperlyConfigured(error_msg)
+# with open(secret_file) as f:
+#     secrets = json.loads(f.read())
 
-SECRET_KEY = get_secret("SECRET_KEY")
+# def get_secret(setting):
+#     try:
+#         return secrets[setting]
+#     except KeyError:
+#         error_msg = "Set the {} environment variable".format(setting)
+#         raise ImproperlyConfigured(error_msg)
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# SECRET_KEY = get_secret("SECRET_KEY")
+# DEBUG = True
 
-ALLOWED_HOSTS = []
+# DEPLOY VERSION
+
+SECRET_KEY = config('SECRET_KEY')
+DEBUG = config('DEBUG', default=False, cast=bool)
+
+
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -112,7 +119,7 @@ SITE_ID = 1
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     "django.middleware.security.SecurityMiddleware",
-    # 'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -197,3 +204,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Auth User
 AUTH_USER_MODEL = 'accounts.User'
+
+# Heroku: Update database configuration from $DATABASE_URL.
+import dj_database_url
+db_from_env = dj_database_url.config(conn_max_age=500)
+DATABASES['default'].update(db_from_env)
