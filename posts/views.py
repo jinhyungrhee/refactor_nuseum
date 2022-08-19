@@ -26,7 +26,7 @@ class PostView(APIView):
       }
       return Response(status=status.HTTP_404_NOT_FOUND, data=data)
     # Date Format 변환
-    date = datetime.fromtimestamp(int(date)/1000).strftime("%Y%m%d")
+    date = datetime.fromtimestamp(int(date)/1000)
     post = self.get_post(self, date)
     if post is not None:
       consumptions = Consumption.objects.filter(post=post.id)
@@ -35,7 +35,7 @@ class PostView(APIView):
       return Response(data=data) 
     else:
       data = {
-        'error_msg' : '해당 날짜에 포스트가 존재하지 않습니다.'
+        'error_msg' : '해당 날짜에 작성된 포스트가 존재하지 않습니다.'
       }
       return Response(status=status.HTTP_404_NOT_FOUND, data=data)
 
@@ -47,8 +47,8 @@ class PostView(APIView):
       }
       return Response(status=status.HTTP_400_BAD_REQUEST, data=data)
 
-    # 날짜 변환: unix timestamp string(1660575600000) -> string(20220816)
-    request.data['created_at'] = datetime.fromtimestamp(int(request.data['created_at'])/1000).strftime("%Y%m%d")
+    # 날짜 변환: unix timestamp string(1660575600000) -> datetime
+    request.data['created_at'] = datetime.fromtimestamp(int(request.data['created_at'])/1000)
     
     # 1. postSerializer 통해 역직렬화하여 값을 DB에 저장 -> Post 객체 생성
     serializer = PostSerializer(data=request.data)
