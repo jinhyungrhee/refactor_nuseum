@@ -55,6 +55,7 @@ DJANGO_APPS = [
 
 PROJECT_APPS = [
     "accounts.apps.AccountsConfig",
+    "foods.apps.FoodsConfig",
 ]
 
 THIRD_PARTY_APPS = [
