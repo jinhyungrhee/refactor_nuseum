@@ -57,6 +57,7 @@ PROJECT_APPS = [
     "accounts.apps.AccountsConfig",
     "foods.apps.FoodsConfig",
     "posts.apps.PostsConfig",
+    "consumptions.apps.ConsumptionsConfig",
 ]
 
 THIRD_PARTY_APPS = [

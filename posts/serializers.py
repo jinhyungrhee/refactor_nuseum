@@ -1,14 +1,6 @@
 from rest_framework import serializers
-from .models import Post, Consumption
-
-class ConsumptionSerializer(serializers.ModelSerializer):
-  class Meta:
-    model = Consumption
-    fields = '__all__'
-
-  def create(self, validated_data):
-    consumption = Consumption.objects.create(**validated_data)
-    return consumption 
+from .models import Post
+from foods.models import Food
 
 class PostSerializer(serializers.ModelSerializer):
   class Meta:
@@ -24,3 +16,10 @@ class PostSerializer(serializers.ModelSerializer):
   # TODO : update 메서드 구현
   def update(self, instance, validated_data):
     pass
+
+# 일단 하루 영양 집계 시리얼라이저 -> consumption으로 이동!
+# class NutrientSumSerializer(serializers.ModelSerializer):
+
+#   class Meta:
+#     model = Food
+#     exclude = ('name', 'classifier',)

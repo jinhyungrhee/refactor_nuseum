@@ -31,4 +31,5 @@ class Food(models.Model):
   classifier = models.IntegerField(default=0)
 
   def __str__(self):
-    return f'{self.pk}, {self.name}'
+    # return f'{self.pk}, {self.name}' # 프론트에서 pk가 필요하면 이것 사용
+    return f'{self.name}' # 그렇지 않으면 이름만 사용
