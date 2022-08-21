@@ -19,6 +19,7 @@ class Consumption(models.Model):
   img1 = models.ImageField(upload_to='post/images/%Y/%m/%d', blank=True)
   img2 = models.ImageField(upload_to='post/images/%Y/%m/%d', blank=True)
   img3 = models.ImageField(upload_to='post/images/%Y/%m/%d', blank=True)
+  deprecated = models.BooleanField(default=False)
 
   def __str__(self):
     return f'[post_no.{self.post.id}]{self.food}, {self.amount}, {self.meal_type}'

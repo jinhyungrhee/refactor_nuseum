@@ -118,7 +118,7 @@ class PostIdView(APIView):
 
     else:
       data = {
-        'error_msg' : '해당 날짜에 작성된 포스트가 존재하지 않습니다.'
+        'error_msg' : '작성된 포스트가 존재하지 않습니다.'
       }
       return Response(status=status.HTTP_404_NOT_FOUND, data=data)
 
@@ -137,21 +137,25 @@ class PostIdView(APIView):
       
       consumptions = Consumption.objects.filter(post=post.id)
       # print(consumptions)
-      print(len(consumptions)) # target
-      print(len(request.data['meal'])) # input
+      # print(len(consumptions)) # target
+      # print(len(request.data['meal'])) # input
       for i in range(len(request.data['meal'])):
-        # 빈 리스트인 것은 생략(그대로 보존)
+        # print(consumptions[i])
+        # 1-1.빈 리스트는 '삭제' 처리
         if request.data['meal'][i] == []:
-            continue
-        # 입력받은 데이터
-        data = {
-          'post' : post.id,
-          'food' : request.data['meal'][i][0],
-          'amount' : request.data['meal'][i][1],
-          'meal_type' : request.data['meal'][i][2]
-        }
+          data = {
+            "deprecated" : True
+          }
+        else:
+          # 1-2.빈 리스트가 아닌 것들은 '수정' 또는 '생성'
+          data = {
+            'post' : post.id,
+            'food' : request.data['meal'][i][0],
+            'amount' : request.data['meal'][i][1],
+            'meal_type' : request.data['meal'][i][2]
+          }
         
-        # 수정하려는 consumption의 수보다 request.data의 수가 작거나 같을 때에만 해당 쌍에 맞춰서 업데이트 진행
+        # 2-1.수정하려는 consumption의 수보다 request.data의 수가 작거나 같을 때에만 해당 쌍에 맞춰서 수정 진행
         if i < len(consumptions):
           consumption_update_serializer = ConsumptionSerializer(consumptions[i], data=data, partial=True)
           # print(request.data['meal'][i])
@@ -160,11 +164,20 @@ class PostIdView(APIView):
             consumption_update_serializer.save()
           else:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=consumption_update_serializer.errors)
-        # 수정하려는 consumption의 수보다 request.data의 수가 더 많으면 추가로 생성
+        # 2-2.수정하려는 consumption의 수보다 request.data의 수가 더 많으면 "추가로 생성"
         else: 
           consumption_create_serializer = ConsumptionSerializer(data=data)
           if consumption_create_serializer.is_valid():
             consumption_create_serializer.save()
+
+      # 수정 & 추가 생성이 완료되었으면 deprecated consumption는 삭제
+      try:
+        deprecated_consumptions = Consumption.objects.filter(post=post.id, deprecated=True)
+        # print(deprecated_consumptions)
+        deprecated_consumptions.delete()
+        print('deprecated consumptions 삭제 완료!')
+      except:
+        print('deprecated consumptions가 존재하지 않습니다!')
 
       consumptions = Consumption.objects.filter(post=post.id) # 해당 포스트에 걸려있는 섭취정보 다 가져옴
       return Response(data=consumptions.values(), status=status.HTTP_200_OK)
@@ -173,6 +186,3 @@ class PostIdView(APIView):
         'error_msg' : '포스트가 존재하지 않습니다.'
       }
       return Response(status=status.HTTP_400_BAD_REQUEST, data=data)
-
-      # for i in range()
-      # serializer = ConsumptionSerializer()
