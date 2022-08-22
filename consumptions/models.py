@@ -23,3 +23,11 @@ class Consumption(models.Model):
 
   def __str__(self):
     return f'[post_no.{self.post.id}]{self.food}, {self.amount}, {self.meal_type}'
+
+# class Water(models.Model):
+#   post = models.ForeignKey(Post, on_delete=models.CASCADE)
+#   amount = models.IntegerField(default=0)
+#   deprecated = models.BooleanField(default=False)
+
+#   def __str__(self):
+#     return f'[post_no.{self.post.id}] water amount:{self.amount}'

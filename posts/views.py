@@ -17,6 +17,8 @@ class PostDateView(APIView):
       return post
     except Post.DoesNotExist:
       return None
+    except Post.MultipleObjectsReturned:
+      return None
 
   def get(self, request):
     date = self.request.GET.get('date', None)
@@ -36,7 +38,7 @@ class PostDateView(APIView):
       return Response(data=data) 
     else:
       data = {
-        'error_msg' : '해당 날짜에 작성된 포스트가 존재하지 않습니다.'
+        'error_msg' : '해당 날짜에 작성된 포스트가 존재하지 않거나 두 개 이상입니다.(두 개 이상인 경우는 테스트에서만 발생)'
       }
       return Response(status=status.HTTP_404_NOT_FOUND, data=data)
 
