@@ -8,6 +8,7 @@ class ConsumptionSerializer(serializers.ModelSerializer):
     fields = '__all__'
 
   def create(self, validated_data):
+    print(validated_data)
     consumption = Consumption.objects.create(**validated_data)
     return consumption 
 
