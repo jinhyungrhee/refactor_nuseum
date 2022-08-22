@@ -51,7 +51,7 @@ class PostDateView(APIView):
   def post(self, request):
     # 아무 값도 입력하지 않았을 때 예외처리(400 에러 리턴)
     print(request.POST)
-    print(request.FILES)
+    print(request.FILES['file'])
     print(request.data)
     if request.data['meal'] == []:
       data = {
