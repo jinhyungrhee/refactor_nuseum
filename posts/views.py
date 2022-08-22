@@ -50,6 +50,7 @@ class PostDateView(APIView):
 
   def post(self, request):
     # 아무 값도 입력하지 않았을 때 예외처리(400 에러 리턴)
+    print(request.data)
     if request.data['meal'] == []:
       data = {
         'empty_value_error' : '최소 한 끼는 반드시 입력해야 합니다.'
