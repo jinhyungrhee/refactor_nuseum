@@ -78,6 +78,7 @@ class PostDateView(APIView):
         food_amount = elem[1]
         meal_type = elem[2]
         img1 = elem[3]
+        print(elem[3])
         img2 = elem[4]
         img3 = elem[5]
         # TODO : 이미지를 올리고 이미지의 url을 저장
