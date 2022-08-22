@@ -79,8 +79,8 @@ class PostDateView(APIView):
         meal_type = elem[2]
         img1 = elem[3]
         print(elem[3])
-        img2 = elem[4]
-        img3 = elem[5]
+        # img2 = elem[4]
+        # img3 = elem[5]
         # TODO : 이미지를 올리고 이미지의 url을 저장
 
         consumption_data = {
@@ -89,8 +89,8 @@ class PostDateView(APIView):
           'amount' : food_amount,
           'meal_type' : meal_type,
           'img1' : img1,
-          'img2' : img2,
-          'img3' : img3,
+          # 'img2' : img2,
+          # 'img3' : img3,
         }
 
         consumption_serializer = ConsumptionSerializer(data=consumption_data)
