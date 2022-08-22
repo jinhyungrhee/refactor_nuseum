@@ -53,14 +53,16 @@ class PostDateView(APIView):
     print(request.POST)
     print(request.FILES['file'])
     print(request.data)
-    if request.data['meal'] == []:
-      data = {
-        'empty_value_error' : '최소 한 끼는 반드시 입력해야 합니다.'
-      }
-      return Response(status=status.HTTP_400_BAD_REQUEST, data=data)
+    # ====================== 수정중 =============================================================
+    # if request.data['meal'] == []:
+    #   data = {
+    #     'empty_value_error' : '최소 한 끼는 반드시 입력해야 합니다.'
+    #   }
+    #   return Response(status=status.HTTP_400_BAD_REQUEST, data=data)    
+    # =========================================================================================
 
     # 날짜 변환: unix timestamp string(1660575600000) -> datetime
-    request.data['created_at'] = datetime.fromtimestamp(int(request.data['created_at'])/1000)
+    request.data['created_at'] = datetime.fromtimestamp(int(request.data['created_at'][0])/1000) # 수정
     
     # 1. postSerializer 통해 역직렬화하여 값을 DB에 저장 -> Post 객체 생성
     serializer = PostSerializer(data=request.data)
@@ -73,35 +75,41 @@ class PostDateView(APIView):
       
       # 2. 포스트가 생성되고 난 뒤에 그 다음에 해당 post id를 가지고 Post_Consumption 테이블 지정
       # 2-1. 입력받은 데이터로 음식 consumption 생성하는 로직**
-      for elem in request.data['meal']:
-        # 방금 생성된 포스트의 pk값 가져오기
-        post_id = post_serializer['id']
-        # 입력받은 값들을 consumption 객체의 각 필드에 입력
-        food_id = elem[0]
-        food_amount = elem[1]
-        meal_type = elem[2]
-        img1 = elem[3]
-        print(elem[3])
+      # =============================== 수정중 ===================================================
+      # for elem in request.data['meal']:
+      #   # 방금 생성된 포스트의 pk값 가져오기
+      #   post_id = post_serializer['id']
+      #   # 입력받은 값들을 consumption 객체의 각 필드에 입력
+      #   food_id = elem[0]
+      #   food_amount = elem[1]
+      #   meal_type = elem[2]
+      #   img1 = elem[3]
+      #   print(elem[3])
         # img2 = elem[4]
         # img3 = elem[5]
         # TODO : 이미지를 올리고 이미지의 url을 저장
+      food_id = int(request.data['meal.0.0'][0])
+      food_amount = int(request.data['meal.0.0'][0])
+      meal_type = request.data['meal.0.0'][0]
+      img1 = request.data['meal.0.3']
 
-        consumption_data = {
-          'post' : post_id,
-          'food' : food_id,
-          'amount' : food_amount,
-          'meal_type' : meal_type,
-          'img1' : img1,
-          # 'img2' : img2,
-          # 'img3' : img3,
-        }
+      # indentation
+      consumption_data = {
+        'post' : post_id,
+        'food' : food_id,
+        'amount' : food_amount,
+        'meal_type' : meal_type,
+        'img1' : img1,
+        # 'img2' : img2,
+        # 'img3' : img3,
+      }
 
-        consumption_serializer = ConsumptionSerializer(data=consumption_data)
-        if consumption_serializer.is_valid():
-          # consumption 객체 생성
-          consumption_serializer.save()
-        else:
-          return Response(status=status.HTTP_400_BAD_REQUEST, data=consumption_serializer.errors)
+      consumption_serializer = ConsumptionSerializer(data=consumption_data)
+      if consumption_serializer.is_valid():
+        # consumption 객체 생성
+        consumption_serializer.save()
+      else:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data=consumption_serializer.errors) # indentation 하나 뒤로
 
       # 2-2. 입력받은 데이터로 '수분(물)' consumption 생성하는 로직** (수분은 '단일 값'만 입력받음)
       post_id = post_serializer['id']
