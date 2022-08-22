@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from .models import Post
 from .serializers import PostSerializer
-from consumptions.serializers import ConsumptionSerializer
-from consumptions.models import Consumption
+from consumptions.serializers import ConsumptionSerializer, WaterSerializer
+from consumptions.models import Consumption, WaterConsumption
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -33,8 +33,14 @@ class PostDateView(APIView):
     post = self.get_post(self, date)
     if post is not None:
       consumptions = Consumption.objects.filter(post=post.id)
+      water_consumption = WaterConsumption.objects.get(post=post.id)
+      print(water_consumption.amount)
        # Queryset to JSON
-      data = consumptions.values()
+      # data = consumptions.values()
+      data = {
+        'food_list' : consumptions.values(),
+        'water_amount' : water_consumption.amount,
+      }
       return Response(data=data) 
     else:
       data = {
@@ -55,7 +61,7 @@ class PostDateView(APIView):
     
     # 1. postSerializer 통해 역직렬화하여 값을 DB에 저장 -> Post 객체 생성
     serializer = PostSerializer(data=request.data)
-    print(serializer)
+    # print(serializer)
     if serializer.is_valid():
       post = serializer.save(
         author=request.user
@@ -63,6 +69,7 @@ class PostDateView(APIView):
       post_serializer = PostSerializer(post).data
       
       # 2. 포스트가 생성되고 난 뒤에 그 다음에 해당 post id를 가지고 Post_Consumption 테이블 지정
+      # 2-1. 입력받은 데이터로 음식 consumption 생성하는 로직**
       for elem in request.data['meal']:
         # 방금 생성된 포스트의 pk값 가져오기
         post_id = post_serializer['id']
@@ -85,6 +92,23 @@ class PostDateView(APIView):
           consumption_serializer.save()
         else:
           return Response(status=status.HTTP_400_BAD_REQUEST, data=consumption_serializer.errors)
+
+      # 2-2. 입력받은 데이터로 '수분(물)' consumption 생성하는 로직** (수분은 '단일 값'만 입력받음)
+      post_id = post_serializer['id']
+      # print(request.data['water'])
+      water_amount = request.data['water']
+      
+      water_consumption_data = {
+        'post' : post_id,
+        'amount' : water_amount,
+      }
+
+      water_serializer = WaterSerializer(data=water_consumption_data)
+      # print(water_serializer)
+      if water_serializer.is_valid():
+        water_serializer.save()
+      else:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data=water_serializer.errors)
 
       return Response(data=post_serializer, status=status.HTTP_200_OK)
     else:
@@ -114,8 +138,13 @@ class PostIdView(APIView):
         return Response(status=status.HTTP_403_FORBIDDEN, data=data)
 
       consumptions = Consumption.objects.filter(post=post.id)
+      water_consumption = WaterConsumption.objects.get(post=post.id)
        # Queryset to JSON
-      data = consumptions.values()
+      # data = consumptions.values()
+      data = {
+        'food_list' : consumptions.values(),
+        'water_amount' : water_consumption.amount,
+      }
       return Response(data=data)
 
     else:
@@ -136,7 +165,8 @@ class PostIdView(APIView):
           'error_msg' : '포스트의 작성자가 아닙니다.'
         }
         return Response(status=status.HTTP_403_FORBIDDEN, data=data)
-      
+
+      # <1> 음식에 대해서 PUT 처리**
       consumptions = Consumption.objects.filter(post=post.id)
       # print(consumptions)
       # print(len(consumptions)) # target
@@ -145,21 +175,21 @@ class PostIdView(APIView):
         # print(consumptions[i])
         # 1-1.빈 리스트는 '삭제' 처리
         if request.data['meal'][i] == []:
-          data = {
+          food_data = {
             "deprecated" : True
           }
         else:
           # 1-2.빈 리스트가 아닌 것들은 '수정' 또는 '생성'
-          data = {
+          food_data = {
             'post' : post.id,
             'food' : request.data['meal'][i][0],
             'amount' : request.data['meal'][i][1],
             'meal_type' : request.data['meal'][i][2]
           }
-        
+
         # 2-1.수정하려는 consumption의 수보다 request.data의 수가 작거나 같을 때에만 해당 쌍에 맞춰서 수정 진행
         if i < len(consumptions):
-          consumption_update_serializer = ConsumptionSerializer(consumptions[i], data=data, partial=True)
+          consumption_update_serializer = ConsumptionSerializer(consumptions[i], data=food_data, partial=True)
           # print(request.data['meal'][i])
           if consumption_update_serializer.is_valid():
             # 각 consumption 객체 update
@@ -168,21 +198,62 @@ class PostIdView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST, data=consumption_update_serializer.errors)
         # 2-2.수정하려는 consumption의 수보다 request.data의 수가 더 많으면 "추가로 생성"
         else: 
-          consumption_create_serializer = ConsumptionSerializer(data=data)
+          consumption_create_serializer = ConsumptionSerializer(data=food_data)
           if consumption_create_serializer.is_valid():
             consumption_create_serializer.save()
 
+      # <2> 수분(물)에 대해서 PUT 처리**
+      water_consumption = WaterConsumption.objects.get(post=post.id)
+      water_data = {
+        'post' : post.id,
+        'amount' : request.data['water']
+      }
+      water_update_serializer = WaterSerializer(water_consumption, data=water_data, partial=True)
+      if water_update_serializer.is_valid():
+        water_update_serializer.save()
+      else:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data=water_update_serializer.errors)
+
+      # for i in range(len(request.data['water'])):
+      #   if request.data['water'][i] == -1: # water.amount 값으로 -1을 보내면 삭제 처리
+      #     water_data = {
+      #       "deprecated" : True
+      #     }
+      #   else:
+      #     water_data = {
+      #       'post' : post.id,
+      #       'amount' : request.data['water'][i]
+      #     }
+
+      #   if i < len(water_consumptions): # update
+      #     water_update_serializer = WaterSerializer(water_consumptions[i], data=water_data, partial=True)
+      #     if water_update_serializer.is_valid():
+      #       water_update_serializer.save()
+      #     else:
+      #       return Response(status=status.HTTP_400_BAD_REQUEST, data=water_update_serializer.errors)
+      #   else: # 추가 생성
+      #     water_create_serializer = WaterSerializer(data=water_data)
+      #     if water_create_serializer.is_valid():
+      #       water_create_serializer.save()
+
       # 수정 & 추가 생성이 완료되었으면 deprecated consumption는 삭제
       try:
-        deprecated_consumptions = Consumption.objects.filter(post=post.id, deprecated=True)
+        deprecated_food_consumptions = Consumption.objects.filter(post=post.id, deprecated=True)
+        # deprecated_water_consumptons = WaterConsumption.objects.filter(post=post.id, deprecated=True)
         # print(deprecated_consumptions)
-        deprecated_consumptions.delete()
+        deprecated_food_consumptions.delete()
+        # deprecated_water_consumptons.delete()
         print('deprecated consumptions 삭제 완료!')
       except:
         print('deprecated consumptions가 존재하지 않습니다!')
 
       consumptions = Consumption.objects.filter(post=post.id) # 해당 포스트에 걸려있는 섭취정보 다 가져옴
-      return Response(data=consumptions.values(), status=status.HTTP_200_OK)
+      water_consumption = WaterConsumption.objects.get(post=post.id)
+      data = {
+        'food_list' : consumptions.values(),
+        'water_amount' : water_consumption.amount,
+      }
+      return Response(data=data, status=status.HTTP_200_OK)
     else:
       data = {
         'error_msg' : '포스트가 존재하지 않습니다.'

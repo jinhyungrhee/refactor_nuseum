@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from datetime import datetime
-from .models import Consumption
+from .models import Consumption, WaterConsumption
 from .utils import *
 from posts.models import Post
 
@@ -29,11 +29,16 @@ class DayNutrientView(APIView):
     date = datetime.fromtimestamp(int(date)/1000)
     post = self.get_post(self, date)
     if post is not None:
-      consumptions = Consumption.objects.filter(post=post.id)
+      # 음식 정보
+      food_consumptions = Consumption.objects.filter(post=post.id)
+      # 물 정보
+      water_consumption = WaterConsumption.objects.get(post=post.id)
       # Queryset to JSON
-      day_data = consumptions.values() # <class 'django.db.models.query.QuerySet'>
+      day_food_data = food_consumptions.values() # <class 'django.db.models.query.QuerySet'>
+      day_water_data = water_consumption # 가져오는 값은 한개뿐임
+      print(day_water_data)
       # calculate logic
-      sum_day_data = day_calculate(day_data)
+      sum_day_data = day_calculate(day_food_data, day_water_data)
       return Response(data=sum_day_data) 
     else:
       data = {
@@ -94,3 +99,4 @@ class MonthNutrientView(APIView):
     # for elem in posts:
     #   print(elem)
     return Response(data=sum_month_data)
+
