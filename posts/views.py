@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from .models import Post
 from .serializers import PostSerializer
+from rest_framework.parsers import MultiPartParser, FormParser
 from consumptions.serializers import ConsumptionSerializer, WaterSerializer
 from consumptions.models import Consumption, WaterConsumption
 from rest_framework.response import Response
@@ -10,6 +11,9 @@ from datetime import datetime
 
 # Date를 이용하여 Post에 접근하는 뷰 -> GET, POST 메서드
 class PostDateView(APIView):
+
+  parser_classes = (MultiPartParser, FormParser)
+
   # 날짜로 해당 post 가져오는 메서드
   def get_post(self, request, date):
     try:
@@ -49,6 +53,8 @@ class PostDateView(APIView):
       return Response(status=status.HTTP_404_NOT_FOUND, data=data)
 
   def post(self, request):
+    print(request.POST)
+    print(request.data)
     # 아무 값도 입력하지 않았을 때 예외처리(400 에러 리턴)
     if request.data['meal'] == []:
       data = {
