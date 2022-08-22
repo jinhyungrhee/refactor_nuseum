@@ -38,12 +38,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 #         raise ImproperlyConfigured(error_msg)
 
 # SECRET_KEY = get_secret("SECRET_KEY")
-# DEBUG = True
+DEBUG = True
 
 # DEPLOY VERSION
 
 SECRET_KEY = config('SECRET_KEY')
-DEBUG = config('DEBUG', default=False, cast=bool)
+# DEBUG = config('DEBUG', default=False, cast=bool)
 
 
 ALLOWED_HOSTS = [
