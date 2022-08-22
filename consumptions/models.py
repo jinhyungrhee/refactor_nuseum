@@ -24,10 +24,9 @@ class Consumption(models.Model):
   def __str__(self):
     return f'[post_no.{self.post.id}]{self.food}, {self.amount}, {self.meal_type}'
 
-# class Water(models.Model):
-#   post = models.ForeignKey(Post, on_delete=models.CASCADE)
-#   amount = models.IntegerField(default=0)
-#   deprecated = models.BooleanField(default=False)
+class WaterConsumption(models.Model):
+  post = models.ForeignKey(Post, on_delete=models.CASCADE)
+  amount = models.IntegerField(default=0) # 입력 받은 값으로 계속 수정되게만 구현하면 됨! (필수 입력X)
 
-#   def __str__(self):
-#     return f'[post_no.{self.post.id}] water amount:{self.amount}'
+  def __str__(self):
+    return f'[post_no.{self.post.id}] {self.amount}'

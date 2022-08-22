@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Consumption
+from .models import Consumption, WaterConsumption
 from foods.models import Food
 
 class ConsumptionSerializer(serializers.ModelSerializer):
@@ -23,4 +23,20 @@ class ConsumptionSerializer(serializers.ModelSerializer):
     instance.deprecated = validated_data.get("deprecated", instance.deprecated)
     instance.save()
 
+    return instance
+
+class WaterSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = WaterConsumption
+    fields = '__all__'
+
+  def create(self, validated_data):
+    water_consumption = WaterConsumption.objects.create(**validated_data)
+    return water_consumption
+
+  def update(self, instance, validated_data):
+    instance.post = validated_data.get("post", instance.post)
+    instance.amount = validated_data.get("amount", instance.amount)
+    # instance.deprecated = validated_data.get("deprecated", instance.deprecated)
+    instance.save()
     return instance
