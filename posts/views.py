@@ -13,7 +13,7 @@ import json
 # Date를 이용하여 Post에 접근하는 뷰 -> GET, POST 메서드
 class PostDateView(APIView):
 
-  # parser_classes = (MultiPartParser, FormParser) # 에러 나면 테스트
+  parser_classes = (MultiPartParser, FormParser) # 에러 나면 테스트
 
   # 날짜로 해당 post 가져오는 메서드
   def get_post(self, request, date):
@@ -238,26 +238,26 @@ class PostIdView(APIView):
       # data = consumptions.values()
       # =======================* 경준님이 원하는 출력 형식 *(참고)===================================
       data = {
-        'foods' : {
+        'meal' : {
           'breakfast' : {
             'data' : breakfast_consumptions.values(),
             # 'image' : breakfast_consumptions.image,
-            'image' : [],
+            'image' : '',
           },
           'lunch' : {
             'data' : lunch_consumptions.values(),
             # 'image' : lunch_consumptions.image,
-            'image' : [],
+            'image' : '',
           },
           'dinner' : {
             'data' : dinner_consumptions.values(),
             # 'image' : dinner_consumptions.image,
-            'image' : [],
+            'image' : '',
           },
           'snack' : {
             'data' : snack_consumptions.values(),
             # 'image' : snack_consumptions.image,
-            'image' : [],
+            'image' : '',
           }
         },
         'water_amount' : water_consumption.amount,
@@ -282,7 +282,11 @@ class PostIdView(APIView):
           'error_msg' : '포스트의 작성자가 아닙니다.'
         }
         return Response(status=status.HTTP_403_FORBIDDEN, data=data)
+      # ================================== TODO ====================================================================
+      # classfier별로 오름차순 정렬이 되어있으므로, classfier 개수에 맞춰서 순서대로 업데이트/삭제/ + 개수 이상이면 생성
+      # POST 로직 참고하여 수정!
 
+      # ================================= 수정중 =================================================================
       # <1> 음식에 대해서 PUT 처리**
       consumptions = Consumption.objects.filter(post=post.id)
       # print(consumptions)
@@ -318,7 +322,8 @@ class PostIdView(APIView):
           consumption_create_serializer = ConsumptionSerializer(data=food_data)
           if consumption_create_serializer.is_valid():
             consumption_create_serializer.save()
-
+      # ===============================================================================================================
+      
       # <2> 수분(물)에 대해서 PUT 처리**
       water_consumption = WaterConsumption.objects.get(post=post.id)
       water_data = {
