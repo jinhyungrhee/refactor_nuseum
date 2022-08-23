@@ -42,26 +42,27 @@ class PostDateView(APIView):
       dinner_consumptions = Consumption.objects.filter(post=post.id, meal_type='dinner')
       snack_consumptions = Consumption.objects.filter(post=post.id, meal_type='snack')
       water_consumption = WaterConsumption.objects.get(post=post.id)
+      # 데이터 가져오는 쿼리문 추가
       print(water_consumption.amount)
        # Queryset to JSON
       # data = consumptions.values()
       data = {
         'meal' : {
           'breakfast' : {
-            'foods' : breakfast_consumptions.values(),
-            # 'image' : breakfast_consumptions.image,
+            'data' : breakfast_consumptions.values(),
+            'image' : '',
           },
           'lunch' : {
-            'foods' : lunch_consumptions.values(),
-            # 'image' : lunch_consumptions.image,
+            'data' : lunch_consumptions.values(),
+            'image' : '',
           },
           'dinner' : {
-            'foods' : dinner_consumptions.values(),
-            # 'image' : dinner_consumptions.image,
+            'data' : dinner_consumptions.values(),
+            'image' : '',
           },
           'snack' : {
-            'foods' : snack_consumptions.values(),
-            # 'image' : snack_consumptions.image,
+            'data' : snack_consumptions.values(),
+            'image' : '',
           }
         },
         'water' : water_consumption.amount,
