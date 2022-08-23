@@ -81,6 +81,18 @@ class PostDateView(APIView):
     print(request.POST)
     print(request.FILES)
     print("========================================================================================")
+    food1 = request.POST['meal.breakfast.data.0.food_id']
+    food_amount1 = request.POST['meal.breakfast.data.0.amount']
+    food2 = request.POST['meal.breakfast.data.1.food_id']
+    food_amount2 = request.POST['meal.breakfast.data.1.amount']
+    food_image = request.FILES.getlist('meal.breakfast.image')
+    print(food1)
+    print(food_amount1)
+    print(food2)
+    print(food_amount2)
+    print(food_image)
+    print(type(food_image))
+
     # 아무 값도 입력하지 않았을 때 예외처리(400 에러 리턴)
     if request.data['meal'] == {}:
       data = {
