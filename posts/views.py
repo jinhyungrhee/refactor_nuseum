@@ -13,7 +13,7 @@ import json
 # Date를 이용하여 Post에 접근하는 뷰 -> GET, POST 메서드
 class PostDateView(APIView):
 
-  # parser_classes = (MultiPartParser, FormParser)
+  # parser_classes = (MultiPartParser, FormParser) # 에러 나면 테스트
 
   # 날짜로 해당 post 가져오는 메서드
   def get_post(self, request, date):
@@ -75,9 +75,11 @@ class PostDateView(APIView):
       return Response(status=status.HTTP_404_NOT_FOUND, data=data)
 
   def post(self, request):
+    print("============================================== LOG ====================================")
     print(request.data)
     print(request.POST)
-    print(request.data)
+    print(request.FILES)
+    print("========================================================================================")
     # 아무 값도 입력하지 않았을 때 예외처리(400 에러 리턴)
     if request.data['meal'] == {}:
       data = {
@@ -268,6 +270,7 @@ class PostIdView(APIView):
       }
       return Response(status=status.HTTP_404_NOT_FOUND, data=data)
 
+  # PUT은 좀 나중에 수정...ㅠㅠ
   # 순서 쌍 or 특정 개체에 대한 수정 => PUT 메서드 수정 필요! ****** (id_get 메서드를 수정하는 로직에만 사용?)
   def put(self, request, pk):
     
