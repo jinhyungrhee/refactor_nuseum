@@ -50,7 +50,9 @@ class WaterSerializer(serializers.ModelSerializer):
 class ImageDecodeSerializer(serializers.ModelSerializer):
 
   def create(self, validated_data):
-    post = Post.objects.create(**validated_data) # 수정 필요 (기존에 생성된 post 모델의 id를 넣어야함!)**
+    # post = Post.objects.create(**validated_data) # 수정 필요 (기존에 생성된 post 모델의 id를 넣어야함!)**
+    post = self.context.get("post")
+    print("POST INSTANCE:", post)
     curr_time = datetime.now()
     year = curr_time.strftime('%Y')
     month = curr_time.strftime('%m')
@@ -61,7 +63,7 @@ class ImageDecodeSerializer(serializers.ModelSerializer):
     num = 1
     # print(self.context.get("images")) -> 리스트([]) 형태여야 함!
     # base64로 인코딩된 이미지 불러움
-    for image_string in self.context.get("images"):
+    for image_string in self.context.get("images"): # view에서 보낸 context에서 가져옴*
       header, data = image_string.split(';base64,')
       # print(header, data)
       data_format, ext = header.split('/')
@@ -76,13 +78,13 @@ class ImageDecodeSerializer(serializers.ModelSerializer):
         #     os.makedirs(image_root)
         with open(image_root, 'wb') as f:
           f.write(image_data)
-          bulk_list.append(FoodImage(post=post, image=f'{post.id}_{num}.{ext}'))
+          bulk_list.append(FoodImage(post=post.id, image=f'{post.id}_{num}.{ext}'))
         num += 1
       except TypeError:
         self.fail('invalid_image')
       
     images = FoodImage.objects.bulk_create(bulk_list)
-    print(images)
+    # print(images)
 
     return post
   

@@ -9,11 +9,51 @@ from rest_framework.views import APIView
 from rest_framework import status
 from datetime import datetime
 import json
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+
+from .forms import FoodImageForm
+
+# 코드 활용 -> POST만 이걸로 처리하고 나머지는 APIView로 처리!
+# ========================================================================
+@method_decorator(csrf_exempt, name='dispatch') # 
+def model_image_upload(request):
+  if request.method == "POST":
+    print(request.POST['post']) # ['23'] / ['23', '20'] -> 23, 20 (6글자 string)
+    print(type(request.POST['post'])) # str / str
+    print(request.POST) 
+    print(request.POST['meal_type']) # ['breakfast'] / ['breakfast', 'lunch'] 
+    print(type(request.POST['meal_type'])) # str / str
+    print(request.FILES)
+    # 여러 개인 경우 이렇게 처리...
+    post_id_list = list(map(int, request.POST['post'].split(',')))
+    # print(post_id_list)
+    meal_type_list = request.POST['meal_type'].split(',')
+    request_count = len(post_id_list)
+    image_list = request.FILES.getlist('image')
+    for i in range(request_count):
+      text_data = {
+        'post' : int(post_id_list[i]),
+        'meal_type' : meal_type_list[i]
+      }
+      image_data = {
+        'image' : image_list[i]
+      }
+      form = FoodImageForm(text_data, image_data)
+      # print(form)
+      if form.is_valid():
+        form.save()
+        return HttpResponse(json.dumps({"status" : "Success"}))
+      else:
+        return HttpResponse(json.dumps({"status" : "Failed"}))
+# ==========================================================================
+
 
 # Date를 이용하여 Post에 접근하는 뷰 -> GET, POST 메서드
 class PostDateView(APIView):
 
-  parser_classes = (MultiPartParser, FormParser) # 에러 나면 테스트
+  # parser_classes = (MultiPartParser, FormParser) # multipart 사용 시 추가
 
   # 날짜로 해당 post 가져오는 메서드
   def get_post(self, request, date):
@@ -74,34 +114,34 @@ class PostDateView(APIView):
         'error_msg' : '해당 날짜에 작성된 포스트가 존재하지 않거나 두 개 이상입니다.(두 개 이상인 경우는 테스트에서만 발생)'
       }
       return Response(status=status.HTTP_404_NOT_FOUND, data=data)
-
+  
   def post(self, request):
     print("============================================== LOG ====================================")
+    print("순수 REQUEST", request)  # <rest_framework.request.Request: POST '/api/v1/post/'>
     print(request.data)
     print(request.POST)
     print(request.FILES)
     print("========================================================================================")
-    food1 = request.POST['meal.breakfast.data.0.food_id']
-    food_amount1 = request.POST['meal.breakfast.data.0.amount']
-    food2 = request.POST['meal.breakfast.data.1.food_id']
-    food_amount2 = request.POST['meal.breakfast.data.1.amount']
-    food_image1 = request.POST['meal.breakfast.image']
-    print(food_image1)
-    print(type(food_image1))
-    food_image2 = request.FILES['meal.breakfast.image']['file']
-    print(food_image2)
-    print(type(food_image2))
-    food_image3 = request.FILES.getlist('file')
-    print(food_image3)
-    print(type(food_image3))
-    print(food1)
-    print(food_amount1)
-    print(type(food_amount1))
-    print(food2)
-    print(food_amount2)
+    # food1 = request.POST['meal.breakfast.data.0.food_id']
+    # food_amount1 = request.POST['meal.breakfast.data.0.amount']
+    # food2 = request.POST['meal.breakfast.data.1.food_id']
+    # food_amount2 = request.POST['meal.breakfast.data.1.amount']
+    # food_image1 = request.POST['meal.breakfast.image']
+    # print(food_image1)
+    # print(type(food_image1))
+    # food_image2 = request.FILES['meal.breakfast.image']['file']
+    # print(food_image2)
+    # print(type(food_image2))
+    # food_image3 = request.FILES.getlist('file')
+    # print(food_image3)
+    # print(type(food_image3))
+    # print(food1)
+    # print(food_amount1)
+    # print(type(food_amount1))
+    # print(food2)
+    # print(food_amount2)
     
     
-
     # 아무 값도 입력하지 않았을 때 예외처리(400 에러 리턴)
     if request.data['meal'] == {}:
       data = {
@@ -119,7 +159,10 @@ class PostDateView(APIView):
       post = serializer.save(
         author=request.user
       )
+      print("POST INSTANCE:", post)
       post_serializer = PostSerializer(post).data # 포스트 생성**
+      print("POST SERIALIZER DATA:", post_serializer)
+      print()
       
       # 2. 포스트가 생성되고 난 뒤에 그 다음에 해당 post id를 가지고 Post_Consumption 테이블 지정
       # 2-1. 입력받은 데이터로 음식 consumption 생성하는 로직**
@@ -187,19 +230,21 @@ class PostDateView(APIView):
                 consumption_serializer.save()
               else:
                 return Response(status=status.HTTP_400_BAD_REQUEST, data=consumption_serializer.errors)
-          # <1>-2. 'img'부분 처리
+          # <1>-2. 'img'부분 처리 : base64 인코딩/디코딩
           else: # elem(str) == 'img'
             for elem in temp_dict['image']: # image 개수만큼 for문을 돌기 때문에, 굳이 음식 개수와 이미지 개수를 맞출 필요는 없음!
               image = temp_dict['image']
-              # print(image)
+              print(classifier[i])
               image_data = {
                 'post' : post_id,
-                'image' : image,
+                'images' : image, # 얘를 어쩌면 좋을까...? 아래에서 넣을 때 temp_dict['image'].get("imaeg")로 넣기??
                 'meal_type' : classifier[i],
               }
               # print(image_data)
               # 입력 값이 맞는지 체크 필요!
-              image_decode_serializer = ImageDecodeSerializer(data=image_data, context={'request':request, 'images':data.get('images')})
+              print("===========================================")
+              print("POST INSTANCE:", post)
+              image_decode_serializer = ImageDecodeSerializer(data=image_data, context={'request':request, 'images':image_data.get('images'), 'post':post})
               if image_decode_serializer.is_valid():
                 image_decode_serializer.save()
                 return Response(data=image_decode_serializer.data, status=status.HTTP_201_CREATED)
