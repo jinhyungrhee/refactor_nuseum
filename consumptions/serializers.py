@@ -13,7 +13,7 @@ class ConsumptionSerializer(serializers.ModelSerializer):
     fields = '__all__'
 
   def create(self, validated_data):
-    print(validated_data)
+    # print(validated_data)
     consumption = Consumption.objects.create(**validated_data)
     return consumption 
 
@@ -51,64 +51,30 @@ class WaterSerializer(serializers.ModelSerializer):
 class ImageDecodeSerializer(serializers.ModelSerializer):
 
   def create(self, validated_data):
-    # post = Post.objects.create(**validated_data) # 수정 필요 (기존에 생성된 post 모델의 id를 넣어야함!)**
     post = self.context.get("post")
     meal_type = self.context.get("meal_type")
-    print("POST INSTANCE:", post)
-    curr_time = datetime.now()
-    year = curr_time.strftime('%Y')
-    month = curr_time.strftime('%m')
-    day = curr_time.strftime('%d')
+    date_data = self.context.get("date")
+    num = self.context.get("num")
 
-    # 이미지 디코딩
-    bulk_list = []
-    num = 1
-    # print(self.context.get("images")) -> 리스트([]) 형태여야 함!
-    # base64로 인코딩된 이미지 불러움
-    for image_string in self.context.get("images"): # view에서 보낸 context에서 가져옴*
-      header, data = image_string.split(';base64,')
-      # print(header, data)
-      data_format, ext = header.split('/')
-      try:
-        image_data = base64.b64decode(data) # 이미지 생성
-        # image_root = settings.MEDIA_ROOT + "\\post\\images\\2022\\08\\23\\" + str(post.id) + "_" + str(num) + "." + ext
-        # image_root = settings.MEDIA_ROOT + f'\\post\\images\\{year}\\{month}\\{day}\\' + str(post.id) + "_" + str(num) + "." + ext
-        # image_root = settings.MEDIA_ROOT + "\\" + str(post.id) + "_" + str(num) + "." + ext
-        print(image_data)
-        img_list = []
-        # image_data를 S3에 올리기
-        s3r = boto3.resource('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
-        key = "%s"%(f'{year}/{month}/{day}')
-        s3r.Bucket(settings.AWS_STORAGE_BUCKET_NAME).put_object(Key=key+'/%s'%(f'{post.id}_{num}.{ext}'), Body=image_data, ContentType='jpg')
-        aws_url = f'{settings.IMAGE_URL}/{year}/{month}/{day}/{post.id}_{num}.{ext}'
-        food_image = FoodImage(post=post, image=aws_url, meal_type=meal_type)
-        food_image.save()
+    year = date_data.strftime('%Y')
+    month = date_data.strftime('%m')
+    day = date_data.strftime('%d')
+    # print("context.get(\"images\") LOG:", self.context.get("images")) 
+    image_string = self.context.get("images") # String으로 들어옴! -> 시간 단축!
+    header, data = image_string.split(';base64,')
+    # header, data = image_string[num].split(';base64,') # 리스트째로 들어옴!
+    data_format, ext = header.split('/')
+    try:
+      image_data = base64.b64decode(data) # 이미지 생성
+      s3r = boto3.resource('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
+      key = "%s"%(f'{year}/{month}/{day}')
+      s3r.Bucket(settings.AWS_STORAGE_BUCKET_NAME).put_object(Key=key+'/%s'%(f'{post.id}_{meal_type}_{num}.{ext}'), Body=image_data, ContentType='jpg')
+      aws_url = f'{settings.IMAGE_URL}/{year}/{month}/{day}/{post.id}_{meal_type}_{num}.{ext}'
+      FoodImage.objects.create(post=post, image=aws_url, meal_type=meal_type) # 이미지 객체 생성하여 DB에 저장
 
-        '''
-        image_root = settings.MEDIA_ROOT + "\\" + str(post.id) + "_" + str(num) + "." + ext
-        # print(image_root)
-        # 파일 생성 코드 왜 안되는지 체크!
-        # if not os.path.isdir(image_root):
-        #     os.makedirs(image_root)
-        with open(image_root, 'wb') as f:
-          f.write(image_data)
-          # food_image = FoodImage.objects.create(
-          #   post = post,
-          #   image = f'{post.id}_{num}.{ext}'
-          # )
-          # bulk_list.append(food_image)
-          bulk_list.append(FoodImage(post=post, image=f'{post.id}_{num}.{ext}', meal_type=meal_type))
-          # bulk_list.append(FoodImage.objects.create(post = post, image = f'{post.id}_{num}.{ext}'))
-        '''
-        num += 1
-      except TypeError:
-        self.fail('invalid_image')
-    '''
-    images = FoodImage.objects.bulk_create(bulk_list)
-    print("생성된 IMAGE 객체 결과:", images)
-    ''' 
-    # print(images)
-
+    except TypeError:
+      self.fail('invalid_image')
+      
     return post
   
   class Meta:

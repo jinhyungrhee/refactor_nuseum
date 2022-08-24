@@ -222,8 +222,8 @@ import dj_database_url
 db_from_env = dj_database_url.config(conn_max_age=500)
 DATABASES['default'].update(db_from_env)
 
-# DEVELOP Version
-# Do Not Conatin for Deploying!!! ********************
+# DEV Version
+#***** Do Not Includ Key When you deploy *************
 #!!!!!!!!!!!!!!!!!! CHECK TWICE !!!!!!!!!!!!!!!!!!!!!!
 # AWS_ACCESS_KEY_ID = get_secret("AWS_ACCESS_KEY_ID")
 # AWS_SECRET_ACCESS_KEY = get_secret("AWS_SECRET_ACCESS_KEY")

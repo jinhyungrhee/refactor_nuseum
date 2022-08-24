@@ -22,12 +22,12 @@ from .forms import FoodImageForm
 @method_decorator(csrf_exempt, name='dispatch') # 
 def model_image_upload(request):
   if request.method == "POST":
-    print(request.POST['post']) # ['23'] / ['23', '20'] -> 23, 20 (6글자 string)
-    print(type(request.POST['post'])) # str / str
-    print(request.POST) 
-    print(request.POST['meal_type']) # ['breakfast'] / ['breakfast', 'lunch'] 
-    print(type(request.POST['meal_type'])) # str / str
-    print(request.FILES)
+    # print(request.POST['post']) # ['23'] / ['23', '20'] -> 23, 20 (6글자 string)
+    # print(type(request.POST['post'])) # str / str
+    # print(request.POST) 
+    # print(request.POST['meal_type']) # ['breakfast'] / ['breakfast', 'lunch'] 
+    # print(type(request.POST['meal_type'])) # str / str
+    # print(request.FILES)
     # 여러 개인 경우 이렇게 처리...
     post_id_list = list(map(int, request.POST['post'].split(',')))
     # print(post_id_list)
@@ -83,14 +83,14 @@ class PostDateView(APIView):
       breakfast_consumptions = Consumption.objects.filter(post=post.id, meal_type='breakfast')
       # breakfast 이미지 처리
       breakfast_images = FoodImage.objects.filter(post=post.id, meal_type='breakfast')
-      print(breakfast_images)
+      # print(breakfast_images)
       # 쿼리셋에서 이미지 이름들을 꺼내서 경로로 변경해서 리스트로 저장하는 로직 추가(가능하면 함수로 뺄 것!) 
       breakfast_images_queryset = breakfast_images.values('image')
       breakfast_images_list = []
       for i in range(len(breakfast_images_queryset)):
-        print(breakfast_images_queryset[i]['image'])
+        # print(breakfast_images_queryset[i]['image'])
         breakfast_images_list.append(breakfast_images_queryset[i]['image'])
-      print(breakfast_images_list)
+      # print(breakfast_images_list)
       # breakfast_images_list = list(breakfast_images.values_list('image'))
       # print(breakfast_images_list) # [('110_1.jpeg',)]
       # print(type(breakfast_images_list))
@@ -102,9 +102,9 @@ class PostDateView(APIView):
       lunch_images_queryset = lunch_images.values('image')
       lunch_images_list = []
       for i in range(len(lunch_images_queryset)):
-        print(lunch_images_queryset[i]['image'])
+        # print(lunch_images_queryset[i]['image'])
         lunch_images_list.append(lunch_images_queryset[i]['image'])
-      print(lunch_images_list)
+      # print(lunch_images_list)
       
       dinner_consumptions = Consumption.objects.filter(post=post.id, meal_type='dinner')
       # dinner 이미지 처리
@@ -112,9 +112,9 @@ class PostDateView(APIView):
       dinner_images_queryset = dinner_images.values('image')
       dinner_images_list = []
       for i in range(len(dinner_images_queryset)):
-        print(dinner_images_queryset[i]['image'])
+        # print(dinner_images_queryset[i]['image'])
         dinner_images_list.append(dinner_images_queryset[i]['image'])
-      print(dinner_images_list)
+      # print(dinner_images_list)
       
       snack_consumptions = Consumption.objects.filter(post=post.id, meal_type='snack')
       # snack 이미지 처리
@@ -122,13 +122,13 @@ class PostDateView(APIView):
       snack_images_queryset = snack_images.values('image')
       snack_images_list = []
       for i in range(len(snack_images_queryset)):
-        print(snack_images_queryset[i]['image'])
+        # print(snack_images_queryset[i]['image'])
         snack_images_list.append(snack_images_queryset[i]['image'])
-      print(snack_images_list)
+      # print(snack_images_list)
 
       water_consumption = WaterConsumption.objects.get(post=post.id)
       # 데이터 가져오는 쿼리문 추가
-      print(water_consumption.amount)
+      # print(water_consumption.amount)
        # Queryset to JSON
       # data = consumptions.values()
       data = {
@@ -162,32 +162,6 @@ class PostDateView(APIView):
       return Response(status=status.HTTP_404_NOT_FOUND, data=data)
   
   def post(self, request):
-    print("============================================== LOG ====================================")
-    print("순수 REQUEST", request)  # <rest_framework.request.Request: POST '/api/v1/post/'>
-    print(request.data)
-    print(request.POST)
-    print(request.FILES)
-    print("========================================================================================")
-    # food1 = request.POST['meal.breakfast.data.0.food_id']
-    # food_amount1 = request.POST['meal.breakfast.data.0.amount']
-    # food2 = request.POST['meal.breakfast.data.1.food_id']
-    # food_amount2 = request.POST['meal.breakfast.data.1.amount']
-    # food_image1 = request.POST['meal.breakfast.image']
-    # print(food_image1)
-    # print(type(food_image1))
-    # food_image2 = request.FILES['meal.breakfast.image']['file']
-    # print(food_image2)
-    # print(type(food_image2))
-    # food_image3 = request.FILES.getlist('file')
-    # print(food_image3)
-    # print(type(food_image3))
-    # print(food1)
-    # print(food_amount1)
-    # print(type(food_amount1))
-    # print(food2)
-    # print(food_amount2)
-    
-    
     # 아무 값도 입력하지 않았을 때 예외처리(400 에러 리턴)
     if request.data['meal'] == {}:
       data = {
@@ -196,59 +170,22 @@ class PostDateView(APIView):
       return Response(status=status.HTTP_400_BAD_REQUEST, data=data)
 
     # 날짜 변환: unix timestamp string(1660575600000) -> datetime
-    date_data = datetime.fromtimestamp(int(request.data['created_at'])/1000)
+    date_data = datetime.fromtimestamp(int(request.data['created_at'])/1000) # 이미지 만들 때 context_data로 넘겨줘야 함!
     request.data['created_at'] = datetime.fromtimestamp(int(request.data['created_at'])/1000)
-    year = date_data.strftime("%Y")
-    month = date_data.strftime("%m")
-    day = date_data.strftime("%d")
     
     # 1. postSerializer 통해 역직렬화하여 값을 DB에 저장 -> Post 객체 생성
     serializer = PostSerializer(data=request.data)
-    # print(serializer)
     if serializer.is_valid():
       post = serializer.save(
         author=request.user
       )
-      print("POST INSTANCE:", post)
       post_serializer = PostSerializer(post).data # 포스트 생성**
-      print("POST SERIALIZER DATA:", post_serializer)
-      print()
-      
+
       # 2. 포스트가 생성되고 난 뒤에 그 다음에 해당 post id를 가지고 Post_Consumption 테이블 지정
       # 2-1. 입력받은 데이터로 음식 consumption 생성하는 로직**
       # 방금 생성된 포스트의 pk값 가져오기 -> 전체적으로 사용됨! ** <<post_id는 전역변수처럼 사용>>
       post_id = post_serializer['id']
       
-      # 수정중====================================================================================
-      # for elem in request.data['meal']: # meal -> food 변경 예정
-      #   # 입력받은 값들을 consumption 객체의 각 필드에 입력
-      #   food_id = elem['food_id']
-      #   food_amount = elem['amount']
-      #   meal_type = elem['meal_type']
-      #   # img1 = elem[3] # 다른 타입으로 들어옴
-      #   # print(elem[3])
-      #   # img2 = elem[4]
-      #   # img3 = elem[5]
-      #   # TODO : 이미지를 올리고 이미지의 url을 저장
-
-      #   consumption_data = {
-      #     'post' : post_id,
-      #     'food' : food_id,
-      #     'amount' : food_amount,
-      #     'meal_type' : meal_type,
-      #     # 'img1' : img1,
-      #     # 'img2' : img2,
-      #     # 'img3' : img3,
-      #   }
-
-      #   consumption_serializer = ConsumptionSerializer(data=consumption_data)
-      #   if consumption_serializer.is_valid():
-      #     # consumption 객체 생성
-      #     consumption_serializer.save()
-      #   else:
-      #     return Response(status=status.HTTP_400_BAD_REQUEST, data=consumption_serializer.errors)
-      
-      # ===================================== 수정중 ====================================================
       # <1> request.data['meal'] 부분 처리
       # <1>-1 'meal'(foods)의 'data' 입력값들부터 처리
       for i in range(4):
@@ -259,7 +196,6 @@ class PostDateView(APIView):
           # *temp_dict*
           # {'data': [{'food_id': 4, 'amount': 400}, {'food_id': 3, 'amount': 300}, {'food_id': 2, 'amount': 200}, {'food_id': 1, 'amount': 100}], 
           #  'image': []}
-          print(temp_dict)
           if elem == 'data':
             # print(temp_dict['data'])
             for elem in temp_dict['data']:
@@ -282,23 +218,19 @@ class PostDateView(APIView):
                 return Response(status=status.HTTP_400_BAD_REQUEST, data=consumption_serializer.errors)
           # <1>-2. 'img'부분 처리 : base64 인코딩/디코딩
           else: # elem(str) == 'img'
+            num = 0
             for elem in temp_dict['image']: # image 개수만큼 for문을 돌기 때문에, 굳이 음식 개수와 이미지 개수를 맞출 필요는 없음!
-              image = temp_dict['image']
-              print(classifier[i])
+              image = temp_dict['image'] # 리스트 (리스트 전체가 아니라 개별 string을 넣는 것이 훨씬 빠름!)
               
-              # img_url = f'{settings.IMAGE_URL}\\{year}\\{month}\\{day}\\{image}'
-              # print(img_url)
               image_data = {
                 # 'post' : post_id,
-                'images' : image, # 얘를 어쩌면 좋을까...? 아래에서 넣을 때 temp_dict['image'].get("imaeg")로 넣기??
-                # 'images' : img_url, # 얘를 어쩌면 좋을까...? 아래에서 넣을 때 temp_dict['image'].get("imaeg")로 넣기??
+                'images' : image[num], # 만약 PUT이 일어날 때는 IDX 처리를 어떻게 할 것인지 고민 필요!
                 'meal_type' : classifier[i],
               }
-              print("IMAGE_DATA:",image_data)
+              
               # 입력 값이 맞는지 체크 필요!
-              print("===========================================")
-              print("POST INSTANCE:", post)
-              image_decode_serializer = ImageDecodeSerializer(data=image_data, context={'request':request, 'images':image_data.get('images'), 'post':post, 'meal_type':classifier[i]})
+              image_decode_serializer = ImageDecodeSerializer(data=image_data, context={'request':request, 'images':image_data.get('images'), 'post':post, 'meal_type':classifier[i], 'date':date_data, 'num' : num})
+              num += 1
               if image_decode_serializer.is_valid():
                 image_decode_serializer.save()
                 # return Response(data=image_decode_serializer.data, status=status.HTTP_201_CREATED)
