@@ -52,6 +52,7 @@ class ImageDecodeSerializer(serializers.ModelSerializer):
   def create(self, validated_data):
     # post = Post.objects.create(**validated_data) # 수정 필요 (기존에 생성된 post 모델의 id를 넣어야함!)**
     post = self.context.get("post")
+    meal_type = self.context.get("meal_type")
     print("POST INSTANCE:", post)
     curr_time = datetime.now()
     year = curr_time.strftime('%Y')
@@ -72,13 +73,20 @@ class ImageDecodeSerializer(serializers.ModelSerializer):
         # image_root = settings.MEDIA_ROOT + "\\post\\images\\2022\\08\\23\\" + str(post.id) + "_" + str(num) + "." + ext
         # image_root = settings.MEDIA_ROOT + f'\\post\\images\\{year}\\{month}\\{day}\\' + str(post.id) + "_" + str(num) + "." + ext
         image_root = settings.MEDIA_ROOT + "\\" + str(post.id) + "_" + str(num) + "." + ext
+        # image_root = settings.MEDIA_ROOT + "\\" + str(post.id) + "_" + str(num) + "." + ext
         print(image_root)
         # 파일 생성 코드 왜 안되는지 체크!
         # if not os.path.isdir(image_root):
         #     os.makedirs(image_root)
         with open(image_root, 'wb') as f:
           f.write(image_data)
-          bulk_list.append(FoodImage(post=post.id, image=f'{post.id}_{num}.{ext}'))
+          # food_image = FoodImage.objects.create(
+          #   post = post,
+          #   image = f'{post.id}_{num}.{ext}'
+          # )
+          # bulk_list.append(food_image)
+          bulk_list.append(FoodImage(post=post, image=f'{post.id}_{num}.{ext}', meal_type=meal_type))
+          # bulk_list.append(FoodImage.objects.create(post = post, image = f'{post.id}_{num}.{ext}'))
         num += 1
       except TypeError:
         self.fail('invalid_image')
@@ -90,4 +98,5 @@ class ImageDecodeSerializer(serializers.ModelSerializer):
   
   class Meta:
     model = FoodImage
-    fields = '__all__'
+    fields = ('image', 'meal_type')
+    # fields = '__all__'

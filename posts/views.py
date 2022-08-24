@@ -3,7 +3,7 @@ from .models import Post
 from .serializers import PostSerializer
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from consumptions.serializers import ConsumptionSerializer, WaterSerializer, ImageDecodeSerializer
-from consumptions.models import Consumption, WaterConsumption
+from consumptions.models import Consumption, WaterConsumption, FoodImage
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -12,6 +12,7 @@ import json
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.conf import settings
 
 from .forms import FoodImageForm
 
@@ -77,10 +78,53 @@ class PostDateView(APIView):
     date = datetime.fromtimestamp(int(date)/1000)
     post = self.get_post(self, date)
     if post is not None:
+      media_root = settings.MEDIA_ROOT
       breakfast_consumptions = Consumption.objects.filter(post=post.id, meal_type='breakfast')
+      # breakfast 이미지 처리
+      breakfast_images = FoodImage.objects.filter(post=post.id, meal_type='breakfast')
+      print(breakfast_images)
+      # 쿼리셋에서 이미지 이름들을 꺼내서 경로로 변경해서 리스트로 저장하는 로직 추가(가능하면 함수로 뺄 것!) 
+      breakfast_images_queryset = breakfast_images.values('image')
+      breakfast_images_list = []
+      for i in range(len(breakfast_images_queryset)):
+        print(breakfast_images_queryset[i]['image'])
+        breakfast_images_list.append(media_root + '\\' + breakfast_images_queryset[i]['image'])
+      print(breakfast_images_list)
+      # breakfast_images_list = list(breakfast_images.values_list('image'))
+      # print(breakfast_images_list) # [('110_1.jpeg',)]
+      # print(type(breakfast_images_list))
+      
+      
       lunch_consumptions = Consumption.objects.filter(post=post.id, meal_type='lunch')
+      # lunch 이미지 처리
+      lunch_images = FoodImage.objects.filter(post=post.id, meal_type='lunch')
+      lunch_images_queryset = lunch_images.values('image')
+      lunch_images_list = []
+      for i in range(len(lunch_images_queryset)):
+        print(lunch_images_queryset[i]['image'])
+        lunch_images_list.append(media_root + '\\' + lunch_images_queryset[i]['image'])
+      print(lunch_images_list)
+      
       dinner_consumptions = Consumption.objects.filter(post=post.id, meal_type='dinner')
+      # dinner 이미지 처리
+      dinner_images = FoodImage.objects.filter(post=post.id, meal_type='dinner')
+      dinner_images_queryset = dinner_images.values('image')
+      dinner_images_list = []
+      for i in range(len(dinner_images_queryset)):
+        print(dinner_images_queryset[i]['image'])
+        dinner_images_list.append(media_root + '\\' + dinner_images_queryset[i]['image'])
+      print(dinner_images_list)
+      
       snack_consumptions = Consumption.objects.filter(post=post.id, meal_type='snack')
+      # snack 이미지 처리
+      snack_images = FoodImage.objects.filter(post=post.id, meal_type='snack')
+      snack_images_queryset = snack_images.values('image')
+      snack_images_list = []
+      for i in range(len(snack_images_queryset)):
+        print(snack_images_queryset[i]['image'])
+        snack_images_list.append(media_root + '\\' + snack_images_queryset[i]['image'])
+      print(snack_images_list)
+
       water_consumption = WaterConsumption.objects.get(post=post.id)
       # 데이터 가져오는 쿼리문 추가
       print(water_consumption.amount)
@@ -90,19 +134,20 @@ class PostDateView(APIView):
         'meal' : {
           'breakfast' : {
             'data' : breakfast_consumptions.values(),
-            'image' : '',
+            # 'image' : f'{settings.MEDIA_ROOT}\\{breakfast_images.values()}',
+            'image' : breakfast_images_list,
           },
           'lunch' : {
             'data' : lunch_consumptions.values(),
-            'image' : '',
+            'image' : lunch_images_list,
           },
           'dinner' : {
             'data' : dinner_consumptions.values(),
-            'image' : '',
+            'image' : dinner_images_list,
           },
           'snack' : {
             'data' : snack_consumptions.values(),
-            'image' : '',
+            'image' : snack_images_list,
           }
         },
         'water' : water_consumption.amount,
@@ -236,7 +281,7 @@ class PostDateView(APIView):
               image = temp_dict['image']
               print(classifier[i])
               image_data = {
-                'post' : post_id,
+                # 'post' : post_id,
                 'images' : image, # 얘를 어쩌면 좋을까...? 아래에서 넣을 때 temp_dict['image'].get("imaeg")로 넣기??
                 'meal_type' : classifier[i],
               }
@@ -244,15 +289,16 @@ class PostDateView(APIView):
               # 입력 값이 맞는지 체크 필요!
               print("===========================================")
               print("POST INSTANCE:", post)
-              image_decode_serializer = ImageDecodeSerializer(data=image_data, context={'request':request, 'images':image_data.get('images'), 'post':post})
+              image_decode_serializer = ImageDecodeSerializer(data=image_data, context={'request':request, 'images':image_data.get('images'), 'post':post, 'meal_type':classifier[i]})
               if image_decode_serializer.is_valid():
                 image_decode_serializer.save()
-                return Response(data=image_decode_serializer.data, status=status.HTTP_201_CREATED)
-              return Response(data=image_decode_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                # return Response(data=image_decode_serializer.data, status=status.HTTP_201_CREATED)
+              else:
+                return Response(data=image_decode_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
       # 2-2. 입력받은 데이터로 '수분(물)' consumption 생성하는 로직** (수분은 '단일 값'만 입력받음)
-      post_id = post_serializer['id']
+      # post_id = post_serializer['id']
       # print(request.data['water'])
       water_amount = request.data['water']
       
