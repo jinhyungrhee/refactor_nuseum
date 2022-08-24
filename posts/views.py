@@ -13,6 +13,7 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.conf import settings
+from datetime import datetime
 
 from .forms import FoodImageForm
 
@@ -78,7 +79,7 @@ class PostDateView(APIView):
     date = datetime.fromtimestamp(int(date)/1000)
     post = self.get_post(self, date)
     if post is not None:
-      media_root = settings.MEDIA_ROOT
+      # media_root = f'{settings.IMAGE_URL}\\{year}\\{month}\\{day}'
       breakfast_consumptions = Consumption.objects.filter(post=post.id, meal_type='breakfast')
       # breakfast 이미지 처리
       breakfast_images = FoodImage.objects.filter(post=post.id, meal_type='breakfast')
@@ -88,7 +89,7 @@ class PostDateView(APIView):
       breakfast_images_list = []
       for i in range(len(breakfast_images_queryset)):
         print(breakfast_images_queryset[i]['image'])
-        breakfast_images_list.append(media_root + '\\' + breakfast_images_queryset[i]['image'])
+        breakfast_images_list.append(breakfast_images_queryset[i]['image'])
       print(breakfast_images_list)
       # breakfast_images_list = list(breakfast_images.values_list('image'))
       # print(breakfast_images_list) # [('110_1.jpeg',)]
@@ -102,7 +103,7 @@ class PostDateView(APIView):
       lunch_images_list = []
       for i in range(len(lunch_images_queryset)):
         print(lunch_images_queryset[i]['image'])
-        lunch_images_list.append(media_root + '\\' + lunch_images_queryset[i]['image'])
+        lunch_images_list.append(lunch_images_queryset[i]['image'])
       print(lunch_images_list)
       
       dinner_consumptions = Consumption.objects.filter(post=post.id, meal_type='dinner')
@@ -112,7 +113,7 @@ class PostDateView(APIView):
       dinner_images_list = []
       for i in range(len(dinner_images_queryset)):
         print(dinner_images_queryset[i]['image'])
-        dinner_images_list.append(media_root + '\\' + dinner_images_queryset[i]['image'])
+        dinner_images_list.append(dinner_images_queryset[i]['image'])
       print(dinner_images_list)
       
       snack_consumptions = Consumption.objects.filter(post=post.id, meal_type='snack')
@@ -122,7 +123,7 @@ class PostDateView(APIView):
       snack_images_list = []
       for i in range(len(snack_images_queryset)):
         print(snack_images_queryset[i]['image'])
-        snack_images_list.append(media_root + '\\' + snack_images_queryset[i]['image'])
+        snack_images_list.append(snack_images_queryset[i]['image'])
       print(snack_images_list)
 
       water_consumption = WaterConsumption.objects.get(post=post.id)
@@ -195,7 +196,11 @@ class PostDateView(APIView):
       return Response(status=status.HTTP_400_BAD_REQUEST, data=data)
 
     # 날짜 변환: unix timestamp string(1660575600000) -> datetime
+    date_data = datetime.fromtimestamp(int(request.data['created_at'])/1000)
     request.data['created_at'] = datetime.fromtimestamp(int(request.data['created_at'])/1000)
+    year = date_data.strftime("%Y")
+    month = date_data.strftime("%m")
+    day = date_data.strftime("%d")
     
     # 1. postSerializer 통해 역직렬화하여 값을 DB에 저장 -> Post 객체 생성
     serializer = PostSerializer(data=request.data)
@@ -280,12 +285,16 @@ class PostDateView(APIView):
             for elem in temp_dict['image']: # image 개수만큼 for문을 돌기 때문에, 굳이 음식 개수와 이미지 개수를 맞출 필요는 없음!
               image = temp_dict['image']
               print(classifier[i])
+              
+              # img_url = f'{settings.IMAGE_URL}\\{year}\\{month}\\{day}\\{image}'
+              # print(img_url)
               image_data = {
                 # 'post' : post_id,
                 'images' : image, # 얘를 어쩌면 좋을까...? 아래에서 넣을 때 temp_dict['image'].get("imaeg")로 넣기??
+                # 'images' : img_url, # 얘를 어쩌면 좋을까...? 아래에서 넣을 때 temp_dict['image'].get("imaeg")로 넣기??
                 'meal_type' : classifier[i],
               }
-              # print(image_data)
+              print("IMAGE_DATA:",image_data)
               # 입력 값이 맞는지 체크 필요!
               print("===========================================")
               print("POST INSTANCE:", post)

@@ -222,15 +222,18 @@ import dj_database_url
 db_from_env = dj_database_url.config(conn_max_age=500)
 DATABASES['default'].update(db_from_env)
 
+# DEVELOP Version
 # Do Not Conatin for Deploying!!! ********************
-DEFAULT_FILE_STORAGE = 'config.storages.MediaStorage'
-STATICFILES_STORAGE = 'config.storages.StaticStorage'
+#!!!!!!!!!!!!!!!!!! CHECK TWICE !!!!!!!!!!!!!!!!!!!!!!
+# AWS_ACCESS_KEY_ID = get_secret("AWS_ACCESS_KEY_ID")
+# AWS_SECRET_ACCESS_KEY = get_secret("AWS_SECRET_ACCESS_KEY")
 
-MEDIAFILES_LOCATION = 'media'
-STATICFILES_LOCATION = 'static'
+# DEPLOY Version
+AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
 
 AWS_STORAGE_BUCKET_NAME = 'jinhyung.test.aws'
+AWS_REGION = 'ap-northeast-2'
 
-AWS_S3_REGION_NAME = "ap-northeast-2"
+IMAGE_URL = "https://s3.%s.amazonaws.com/%s" % (AWS_REGION, AWS_STORAGE_BUCKET_NAME)
 
-AWS_S3_SIGNATURE_VERSION = "s3v4"

@@ -41,7 +41,8 @@ class FoodImage(models.Model):
   )
   post = models.ForeignKey(Post, on_delete=models.CASCADE)
   # post = models.IntegerField(default=0)
-  image = models.ImageField(upload_to='post/images/%Y/%m/%d', blank=True)
+  # image = models.ImageField(upload_to='post/images/%Y/%m/%d', blank=True)
+  image = models.CharField(max_length=250, blank=True)
   meal_type = models.CharField(max_length=12, choices=MEAL_CHOICES, default=' ')
 
   def __str__(self):

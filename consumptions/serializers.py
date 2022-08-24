@@ -5,6 +5,7 @@ from foods.models import Food
 from posts.models import Post
 from datetime import datetime
 import base64
+import boto3
 
 class ConsumptionSerializer(serializers.ModelSerializer):
   class Meta:
@@ -72,9 +73,20 @@ class ImageDecodeSerializer(serializers.ModelSerializer):
         image_data = base64.b64decode(data) # 이미지 생성
         # image_root = settings.MEDIA_ROOT + "\\post\\images\\2022\\08\\23\\" + str(post.id) + "_" + str(num) + "." + ext
         # image_root = settings.MEDIA_ROOT + f'\\post\\images\\{year}\\{month}\\{day}\\' + str(post.id) + "_" + str(num) + "." + ext
-        image_root = settings.MEDIA_ROOT + "\\" + str(post.id) + "_" + str(num) + "." + ext
         # image_root = settings.MEDIA_ROOT + "\\" + str(post.id) + "_" + str(num) + "." + ext
-        print(image_root)
+        print(image_data)
+        img_list = []
+        # image_data를 S3에 올리기
+        s3r = boto3.resource('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
+        key = "%s"%(f'{year}/{month}/{day}')
+        s3r.Bucket(settings.AWS_STORAGE_BUCKET_NAME).put_object(Key=key+'/%s'%(f'{post.id}_{num}.{ext}'), Body=image_data, ContentType='jpg')
+        aws_url = f'{settings.IMAGE_URL}/{year}/{month}/{day}/{post.id}_{num}.{ext}'
+        food_image = FoodImage(post=post, image=aws_url, meal_type=meal_type)
+        food_image.save()
+
+        '''
+        image_root = settings.MEDIA_ROOT + "\\" + str(post.id) + "_" + str(num) + "." + ext
+        # print(image_root)
         # 파일 생성 코드 왜 안되는지 체크!
         # if not os.path.isdir(image_root):
         #     os.makedirs(image_root)
@@ -87,11 +99,14 @@ class ImageDecodeSerializer(serializers.ModelSerializer):
           # bulk_list.append(food_image)
           bulk_list.append(FoodImage(post=post, image=f'{post.id}_{num}.{ext}', meal_type=meal_type))
           # bulk_list.append(FoodImage.objects.create(post = post, image = f'{post.id}_{num}.{ext}'))
+        '''
         num += 1
       except TypeError:
         self.fail('invalid_image')
-      
+    '''
     images = FoodImage.objects.bulk_create(bulk_list)
+    print("생성된 IMAGE 객체 결과:", images)
+    ''' 
     # print(images)
 
     return post
