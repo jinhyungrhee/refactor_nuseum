@@ -61,6 +61,7 @@ DJANGO_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'storages',
     # 'django.contrib.sites', # deprecated
 ]
 
@@ -220,3 +221,16 @@ AUTH_USER_MODEL = 'accounts.User'
 import dj_database_url
 db_from_env = dj_database_url.config(conn_max_age=500)
 DATABASES['default'].update(db_from_env)
+
+# Do Not Conatin for Deploying!!! ********************
+DEFAULT_FILE_STORAGE = 'config.storages.MediaStorage'
+STATICFILES_STORAGE = 'config.storages.StaticStorage'
+
+MEDIAFILES_LOCATION = 'media'
+STATICFILES_LOCATION = 'static'
+
+AWS_STORAGE_BUCKET_NAME = 'jinhyung.test.aws'
+
+AWS_S3_REGION_NAME = "ap-northeast-2"
+
+AWS_S3_SIGNATURE_VERSION = "s3v4"
