@@ -23,9 +23,9 @@ class ConsumptionSerializer(serializers.ModelSerializer):
     instance.food = validated_data.get("food", instance.food) # None?
     instance.amount = validated_data.get("amount", instance.amount) # None?
     instance.meal_type = validated_data.get("meal_type", instance.meal_type) # None?
-    instance.img1 = validated_data.get("img1", instance.img1)
-    instance.img2 = validated_data.get("img2", instance.img2)
-    instance.img3 = validated_data.get("img3", instance.img3)
+    # instance.img1 = validated_data.get("img1", instance.img1)
+    # instance.img2 = validated_data.get("img2", instance.img2)
+    # instance.img3 = validated_data.get("img3", instance.img3)
     instance.deprecated = validated_data.get("deprecated", instance.deprecated)
     instance.save()
 
@@ -65,7 +65,7 @@ class ImageDecodeSerializer(serializers.ModelSerializer):
     # header, data = image_string[num].split(';base64,') # 리스트째로 들어옴!
     data_format, ext = header.split('/')
     try:
-      image_data = base64.b64decode(data) # 이미지 생성
+      image_data = base64.b64decode(data) # 이미지 파일 생성
       s3r = boto3.resource('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
       key = "%s"%(f'{year}/{month}/{day}')
       s3r.Bucket(settings.AWS_STORAGE_BUCKET_NAME).put_object(Key=key+'/%s'%(f'{post.id}_{meal_type}_{num}.{ext}'), Body=image_data, ContentType='jpg')
@@ -76,8 +76,17 @@ class ImageDecodeSerializer(serializers.ModelSerializer):
       self.fail('invalid_image')
       
     return post
+
+  def update(self, instance, validated_data):
+    instance.post = validated_data.get("post", instance.post)
+    instance.image = validated_data.get("image", instance.image)
+    instance.meal_type = validated_data.get("meal_type", instance.meal_type)
+    instance.deprecated = validated_data.get("deprecated", instance.deprecated)
+    # instance.deprecated = validated_data.get("deprecated", instance.deprecated)
+    instance.save()
+    return instance
   
   class Meta:
     model = FoodImage
-    fields = ('image', 'meal_type')
+    fields = ('image', 'meal_type', 'deprecated')
     # fields = '__all__'

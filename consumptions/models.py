@@ -44,6 +44,7 @@ class FoodImage(models.Model):
   # image = models.ImageField(upload_to='post/images/%Y/%m/%d', blank=True)
   image = models.CharField(max_length=250, blank=True)
   meal_type = models.CharField(max_length=12, choices=MEAL_CHOICES, default=' ')
+  deprecated = models.BooleanField(default=False)
 
   def __str__(self):
     return f'[post_no.{self.post.id}] {self.image} :: {self.id}'
