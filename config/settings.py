@@ -40,9 +40,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECRET_KEY = get_secret("SECRET_KEY")
 DEBUG = True
 
-# DEPLOY VERSION
+# DEPLOY VERSION - heroku
+# SECRET_KEY = config('SECRET_KEY')
 
-SECRET_KEY = config('SECRET_KEY')
+# DEPLOY VERSION - AWS EC2
+SECRET_KEY = os.environ['SECRET_KEY']
 # DEBUG = config('DEBUG', default=False, cast=bool)
 
 
@@ -229,9 +231,14 @@ DATABASES['default'].update(db_from_env)
 # AWS_ACCESS_KEY_ID = get_secret("AWS_ACCESS_KEY_ID")
 # AWS_SECRET_ACCESS_KEY = get_secret("AWS_SECRET_ACCESS_KEY")
 
-# DEPLOY Version
-AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
+# DEPLOY Version - heroku
+# AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
+# AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
+
+# DEPLOY Version = AWS EC2
+AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+
 
 AWS_STORAGE_BUCKET_NAME = 'jinhyung.test.aws'
 AWS_REGION = 'ap-northeast-2'
