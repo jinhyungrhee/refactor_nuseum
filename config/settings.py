@@ -51,6 +51,9 @@ SECRET_KEY = os.environ['SECRET_KEY']
 ALLOWED_HOSTS = [
     'nuseum-server.herokuapp.com',
     '127.0.0.1',
+    'localhost',
+    '0.0.0.0',
+    '.ap-northeast-2.compute.amazonaws.com'
     ]
 
 
