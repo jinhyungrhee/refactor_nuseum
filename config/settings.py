@@ -130,6 +130,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    'accounts.middleware.KickedMiddleware', # 중복 로그인 처리
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -237,3 +238,9 @@ AWS_REGION = 'ap-northeast-2'
 
 IMAGE_URL = "https://s3.%s.amazonaws.com/%s" % (AWS_REGION, AWS_STORAGE_BUCKET_NAME)
 
+# LOGIN_URL = 'dj-rest-auth/login/'
+# LOGIN_URL = "accounts:login"
+LOGIN_URL = "http://127.0.0.1:8000/api/v1/account/login/" # 절대경로 (상대경로를 사용하면 자꾸 기존 URL 뒤에 추가되는 문제 발생!)
+# -> 도메인 주소만 따로 빼낼 수 있는 방법은 없을까?
+# TODO : 현재 session을 삭제하는 것만으로는 로그아웃 처리가 되지 않음! 
+# 프론트에서 LOGIN URL로 리다이렉트 되었을 때마다 token을 삭제하는 로직을 구현해야 함! 

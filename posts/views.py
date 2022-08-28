@@ -478,7 +478,7 @@ class PostIdView(APIView):
                   # S3에서 삭제
                   # print(food_images)
                   print(image_instances.values('image')[cnt_image])
-                  key = image_instances.values('image')[cnt_image]['image'] # 파일명
+                  key = image_instances.values('image')[cnt_image]['image'].split('jinhyung.test.aws/')[1] # 파일명
                   print(key)
                   s3_client = boto3.client(
                     's3',
