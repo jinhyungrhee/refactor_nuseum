@@ -3,7 +3,7 @@ Description=uWSGI service
 After=syslog.target
 
 [Service]
-ExecStart=/home/ubuntu/myvenv/bin/uwsgi -i /srv/refactor_nuseum/.config/uwsgi/mysite.ini
+ExecStart=/home/ubuntu/myvenv/bin/uwsgi -i /srv/refactor_nuseum/.config/uwsgi/refactor_nuseum.ini
 
 Restart=always
 KillSignal=SIGQUIT
