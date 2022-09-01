@@ -1,5 +1,10 @@
 # TODO : nutrient 계산 로직 구현
 from foods.models import Food
+import base64
+import boto3
+from django.conf import settings
+from rest_framework.response import Response
+from rest_framework import status
 
 def day_calculate(day_food_data, day_water_data):
   
@@ -60,7 +65,7 @@ def week_month_calculate(week_data):
     # print(elem.consumption_set.all())
     day_food_data = elem.consumption_set.all().values()
     day_water_data = elem.waterconsumption_set.all().get()
-    print(day_water_data)
+    # print(day_water_data)
     # print(day_data.values())
     sum_day_data = day_calculate(day_food_data, day_water_data)
 
@@ -97,3 +102,44 @@ def week_month_calculate(week_data):
   }
 
   return sum_week_data
+
+def create_image_url(image_string, post_id, date_data, num):
+
+  year = date_data.strftime('%Y')
+  month = date_data.strftime('%m')
+  day = date_data.strftime('%d')
+  header, data = image_string.split(';base64,')
+  # header, data = image_string[num].split(';base64,') # 리스트째로 들어옴!
+  data_format, ext = header.split('/')
+  try:
+    image_data = base64.b64decode(data) # 이미지 파일 생성
+    s3r = boto3.resource('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
+    key = "%s"%(f'{year}/{month}/{day}')
+    s3r.Bucket(settings.AWS_STORAGE_BUCKET_NAME).put_object(Key=key+'/%s'%(f'{post_id}_supplement_{num}.{ext}'), Body=image_data, ContentType='jpg')
+    aws_url = f'{settings.IMAGE_URL}/{year}/{month}/{day}/{post_id}_supplement_{num}.{ext}'
+    # FoodImage.objects.create(post=post, image=aws_url, meal_type=meal_type)
+
+  except TypeError:
+    data = {
+      "err_msg" : "invalid_image"
+    }
+    return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
+  
+  return aws_url
+
+def delete_image(image_name):
+  try:
+    key = image_name.split('jinhyung.test.aws/')[1] # 파일명
+    # print(key)
+    s3_client = boto3.client(
+      's3',
+      aws_access_key_id = settings.AWS_ACCESS_KEY_ID,
+      aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+    )
+    s3_client.delete_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=key)
+    
+  except TypeError:
+    data = {
+      "err_msg" : "invalid_image"
+    }
+    return Response(data=data, status=status.HTTP_400_BAD_REQUEST)

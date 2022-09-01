@@ -36,7 +36,7 @@ class DayNutrientView(APIView):
       # Queryset to JSON
       day_food_data = food_consumptions.values() # <class 'django.db.models.query.QuerySet'>
       day_water_data = water_consumption # 가져오는 값은 한개뿐임
-      print(day_water_data)
+      # print(day_water_data)
       # calculate logic
       sum_day_data = day_calculate(day_food_data, day_water_data)
       return Response(data=sum_day_data) 

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Consumption, WaterConsumption, FoodImage
+from .models import Consumption, WaterConsumption, FoodImage, SupplementConsmption
 from django.conf import settings
 from foods.models import Food
 from posts.models import Post
@@ -46,6 +46,34 @@ class WaterSerializer(serializers.ModelSerializer):
     # instance.deprecated = validated_data.get("deprecated", instance.deprecated)
     instance.save()
     return instance
+
+# 영양제 serializer - 역직렬화(JSON -> DB, deserializer에 사용)
+class SupplementSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = SupplementConsmption
+    # fields = '__all__'
+    exclude = ('supplement', 'amount',) # 검사만 제외한다는 것인지? 맵핑 자체를 안한다는 것인지? => "아예 맵핑에서 제외시킴 ㄷㄷ"
+    # 일단 supplement는 수기로 할당할 예정이고, supplement_amount는 아직 사용 여부X
+
+    def create(self, validated_data):
+      supplement_consumption = SupplementConsmption.objects.create(**validated_data)
+      return supplement_consumption
+
+    def update(self, instance, validated_data):
+      instance.post = validated_data.get("post", instance.post)
+      # instance.supplement = validated_data.get("supplement", instance.supplement)
+      instance.name = validated_data.get("name", instance.name)
+      instance.manufacturer = validated_data.get("manufacturer", instance.manufacturer)
+      # instance.amount = validated_data.get("amount", instance.amount)
+      instance.image = validated_data.get("image", instance.image)
+      instance.save()
+      return instance
+    
+# 영양제 serializer - 직렬화(DB -> JSON)에 사용
+class SupplementDetailSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = SupplementConsmption
+    exclude = ('post', 'supplement', 'amount',) # 이 세가지 제외하고 모두 보여줄 것!
 
 # 이미지 처리
 class ImageDecodeSerializer(serializers.ModelSerializer):
