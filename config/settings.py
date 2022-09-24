@@ -53,7 +53,8 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
     '0.0.0.0',
-    '.ap-northeast-2.compute.amazonaws.com'
+    '.ap-northeast-2.compute.amazonaws.com',
+    '.nuseum.site'
     ]
 
 
