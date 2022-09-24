@@ -344,20 +344,21 @@ class PostIdView(APIView):
                 else:
                   return Response(status=status.HTTP_400_BAD_REQUEST, data=consumption_update_serializer.errors)
               else: # 추가적인 개체들은 생성
-                food_data = {
-                  'post' : post.id,
-                  'food' : request.data['meal'][classifier[i]]['data'][cnt_data]['food_id'],
-                  'amount' : request.data['meal'][classifier[i]]['data'][cnt_data]['amount'],
-                  'meal_type' : classifier[i]
-                  # meal_type은 고정임 -> 바꾸려면 다른 타입에 가서 생성해야 함!
-                  # 'meal_type' : request.data['meal'][i]['meal_type'] # meal_type을 바꾸는건 여기서 지우고 다른곳에서 새로 생성하는 로직으로 구현
-                }
-                # print("추가 음식 개체 생성!!!!")
-                consumption_create_serializer = ConsumptionSerializer(data=food_data)
-                if consumption_create_serializer.is_valid():
-                  consumption_create_serializer.save()
-                else:
-                  return Response(status=status.HTTP_400_BAD_REQUEST, data=consumption_create_serializer.errors)
+                if elem != {}: # 추가했다가 바로 지우는 경우(=에러)는 제외
+                  food_data = {
+                    'post' : post.id,
+                    'food' : request.data['meal'][classifier[i]]['data'][cnt_data]['food_id'],
+                    'amount' : request.data['meal'][classifier[i]]['data'][cnt_data]['amount'],
+                    'meal_type' : classifier[i]
+                    # meal_type은 고정임 -> 바꾸려면 다른 타입에 가서 생성해야 함!
+                    # 'meal_type' : request.data['meal'][i]['meal_type'] # meal_type을 바꾸는건 여기서 지우고 다른곳에서 새로 생성하는 로직으로 구현
+                  }
+                  # print("추가 음식 개체 생성!!!!")
+                  consumption_create_serializer = ConsumptionSerializer(data=food_data)
+                  if consumption_create_serializer.is_valid():
+                    consumption_create_serializer.save()
+                  else:
+                    return Response(status=status.HTTP_400_BAD_REQUEST, data=consumption_create_serializer.errors)
               cnt_data += 1  
           else: # category == 'image': => 'image' 갱신 로직 ================================= 여기까지 완료 =====================================
             image_instances = FoodImage.objects.filter(post=post.id, meal_type=classifier[i])
@@ -395,20 +396,21 @@ class PostIdView(APIView):
                   else:
                     return Response(status=status.HTTP_400_BAD_REQUEST, data=image_update_serializer.errors)
               else: # 기존 이미지 이외로 들어온 것들에 대해서는 create 처리 (cnt_image >= len_image)
-                image_data = {
-                  # 'post' : post_id,
-                  'images' : temp_dict['image'][cnt_image], # 만약 PUT이 일어날 때는 IDX 처리를 어떻게 할 것인지 고민 필요! **
-                  'meal_type' : classifier[i],
-                }
-                
-                # 입력 값이 맞는지 체크 필요! => ** 정상 동작! **
-                image_decode_serializer = ImageDecodeSerializer(data=image_data, context={'request':request, 'images':image_data.get('images'), 'post':post, 'meal_type':classifier[i], 'date':date_data, 'num' : cnt_image})
-                # num += 1 # PUT에서 값이 중복되는지 체크 필요 ** (num을 아예 내부적으로 할당해도 될듯?)
-                if image_decode_serializer.is_valid():
-                  image_decode_serializer.save()
-                  # return Response(data=image_decode_serializer.data, status=status.HTTP_201_CREATED)
-                else:
-                  return Response(data=image_decode_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                if elem != "": # 추가했다가 바로 지우는 경우(=에러)는 제외
+                  image_data = {
+                    # 'post' : post_id,
+                    'images' : temp_dict['image'][cnt_image], # 만약 PUT이 일어날 때는 IDX 처리를 어떻게 할 것인지 고민 필요! **
+                    'meal_type' : classifier[i],
+                  }
+                  
+                  # 입력 값이 맞는지 체크 필요! => ** 정상 동작! **
+                  image_decode_serializer = ImageDecodeSerializer(data=image_data, context={'request':request, 'images':image_data.get('images'), 'post':post, 'meal_type':classifier[i], 'date':date_data, 'num' : cnt_image})
+                  # num += 1 # PUT에서 값이 중복되는지 체크 필요 ** (num을 아예 내부적으로 할당해도 될듯?)
+                  if image_decode_serializer.is_valid():
+                    image_decode_serializer.save()
+                    # return Response(data=image_decode_serializer.data, status=status.HTTP_201_CREATED)
+                  else:
+                    return Response(data=image_decode_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
               cnt_image += 1
       
       # <2> 수분(물)에 대해서 PUT 처리**
@@ -443,22 +445,23 @@ class PostIdView(APIView):
             # s3 이미지 삭제
             delete_image(supplement_consumptions[i].image)
         else: # 추가로 들어온 정보에 대해서는 create 수행
-          supplement_image = list_input_supplement[i]['image']
-          supplement_name = list_input_supplement[i]['name']
-
-          image_url = create_image_url(supplement_image, post.id, date_data, i) # s3에 객체 생성 후 url 리턴
-          supplement_data = {
-            'post' : post.id,
-            'name' : supplement_name,
-            'manufacturer' : list_input_supplement[i]['manufacturer'],
-            # 'supplement_amount' : list_input_supplement[i]['supplement_amount'], # 일단 받지 않음.. 추후에 필요하면 추가!
-            'image' : image_url,
-          }
-          supplement_create_serializer = SupplementSerializer(data=supplement_data)
-          if supplement_create_serializer.is_valid():
-            supplement_create_serializer.save()
-          else:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data=supplement_create_serializer.errors)
+          # 추가했다가 바로 지우는 경우 예외처리(= {}객체가 생성되지만 해당 인덱스에 객체가 존재하지 않는 경우)
+          if list_input_supplement[i] != {}:
+            supplement_image = list_input_supplement[i]['image']
+            supplement_name = list_input_supplement[i]['name']
+            image_url = create_image_url(supplement_image, post.id, date_data, i) # s3에 객체 생성 후 url 리턴
+            supplement_data = {
+              'post' : post.id,
+              'name' : supplement_name,
+              'manufacturer' : list_input_supplement[i]['manufacturer'],
+              # 'supplement_amount' : list_input_supplement[i]['supplement_amount'], # 일단 받지 않음.. 추후에 필요하면 추가!
+              'image' : image_url,
+            }
+            supplement_create_serializer = SupplementSerializer(data=supplement_data)
+            if supplement_create_serializer.is_valid():
+              supplement_create_serializer.save()
+            else:
+              return Response(status=status.HTTP_400_BAD_REQUEST, data=supplement_create_serializer.errors)
 
       # 수정 & 추가 생성이 완료되었으면 deprecated consumption는 삭제
       try:
