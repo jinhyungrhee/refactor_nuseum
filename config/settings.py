@@ -25,23 +25,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 # DEV VERSION
 
-# secret_file = os.path.join(BASE_DIR, 'secrets.json')
+secret_file = os.path.join(BASE_DIR, 'secrets.json')
 
-# with open(secret_file) as f:
-#     secrets = json.loads(f.read())
+with open(secret_file) as f:
+    secrets = json.loads(f.read())
 
-# def get_secret(setting):
-#     try:
-#         return secrets[setting]
-#     except KeyError:
-#         error_msg = "Set the {} environment variable".format(setting)
-#         raise ImproperlyConfigured(error_msg)
+def get_secret(setting):
+    try:
+        return secrets[setting]
+    except KeyError:
+        error_msg = "Set the {} environment variable".format(setting)
+        raise ImproperlyConfigured(error_msg)
 
-# SECRET_KEY = get_secret("SECRET_KEY")
+SECRET_KEY = get_secret("SECRET_KEY")
 # DEBUG = True
 
 # DEPLOY VERSION - heroku
-SECRET_KEY = config('SECRET_KEY')
+# SECRET_KEY = config('SECRET_KEY')
 
 # DEPLOY VERSION - AWS EC2
 # SECRET_KEY = os.environ['SECRET_KEY']
@@ -155,7 +155,7 @@ CORS_ORIGIN_WHITELIST = [
                         'https://nuseum-949i9v22k-parkjju.vercel.app',
                         'http://127.0.0.1:3000',
                         'http://localhost:3000',
-                        'https://dev.example.com:3000/']
+                        'https://dev.example.com:3000']
 CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "config.urls"
@@ -259,16 +259,16 @@ DATABASES['default'].update(db_from_env)
 # DEV Version
 #***** Do Not Includ Key When you deploy *************
 #!!!!!!!!!!!!!!!!!! CHECK TWICE !!!!!!!!!!!!!!!!!!!!!!
-# AWS_ACCESS_KEY_ID = get_secret("AWS_ACCESS_KEY_ID")
-# AWS_SECRET_ACCESS_KEY = get_secret("AWS_SECRET_ACCESS_KEY")
+AWS_ACCESS_KEY_ID = get_secret("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = get_secret("AWS_SECRET_ACCESS_KEY")
 
 # DEPLOY Version - heroku
 # AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
 # AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
 
 # DEPLOY Version = AWS EC2
-AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
-AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
+# AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+# AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
 
 
 AWS_STORAGE_BUCKET_NAME = 'jinhyung.test.aws'
@@ -278,7 +278,7 @@ IMAGE_URL = "https://s3.%s.amazonaws.com/%s" % (AWS_REGION, AWS_STORAGE_BUCKET_N
 
 # LOGIN_URL = 'dj-rest-auth/login/'
 # LOGIN_URL = "accounts:login"
-# LOGIN_URL = "http://127.0.0.1:8000/api/v1/account/login/" # 절대경로 (상대경로를 사용하면 자꾸 기존 URL 뒤에 추가되는 문제 발생!)
+LOGIN_URL = "http://127.0.0.1:8000/api/v1/account/login/" # 절대경로 (상대경로를 사용하면 자꾸 기존 URL 뒤에 추가되는 문제 발생!)
 # -> 도메인 주소만 따로 빼낼 수 있는 방법은 없을까?
 # TODO : 현재 session을 삭제하는 것만으로는 로그아웃 처리가 되지 않음! 
 # 프론트에서 LOGIN URL로 리다이렉트 되었을 때마다 token을 삭제하는 로직을 구현해야 함! 
