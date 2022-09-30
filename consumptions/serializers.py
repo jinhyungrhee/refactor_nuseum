@@ -1,120 +1,175 @@
 from rest_framework import serializers
-from .models import Consumption, WaterConsumption, FoodImage, SupplementConsmption
+from .models import FoodPost, FoodConsumption, FoodImage, SupplementPost, SupplementConsumption, WaterPost
 from django.conf import settings
-from foods.models import Food
-from posts.models import Post
-from datetime import datetime
 import base64
 import boto3
 
-class ConsumptionSerializer(serializers.ModelSerializer):
+
+# Food Serializers
+
+class FoodPostImageSerializer(serializers.ModelSerializer):
   class Meta:
-    model = Consumption
+    model = FoodImage
+    # fields = ['image']
     fields = '__all__'
 
   def create(self, validated_data):
-    # print(validated_data)
-    consumption = Consumption.objects.create(**validated_data)
-    return consumption 
+    pass
 
-  def update(self, instance, validated_data):
-    # print(validated_data)
-    instance.post = validated_data.get("post", instance.post) # None?
-    instance.food = validated_data.get("food", instance.food) # None?
-    instance.amount = validated_data.get("amount", instance.amount) # None?
-    instance.meal_type = validated_data.get("meal_type", instance.meal_type) # None?
-    # instance.img1 = validated_data.get("img1", instance.img1)
-    # instance.img2 = validated_data.get("img2", instance.img2)
-    # instance.img3 = validated_data.get("img3", instance.img3)
-    instance.deprecated = validated_data.get("deprecated", instance.deprecated)
-    instance.save()
-
-    return instance
-
-class WaterSerializer(serializers.ModelSerializer):
+class FoodConsumptionSerializer(serializers.ModelSerializer):
+  name = serializers.ReadOnlyField(source='food.name')
   class Meta:
-    model = WaterConsumption
+    model = FoodConsumption
     fields = '__all__'
 
+class FoodPostSerializer(serializers.ModelSerializer):
+  images = FoodPostImageSerializer(many=True)
+  consumptions = FoodConsumptionSerializer(many=True)
+
+  class Meta:
+    model = FoodPost
+    fields = ['id', 'type', 'created_at', 'updated_at', 'author', 'images', 'consumptions']
+
   def create(self, validated_data):
-    water_consumption = WaterConsumption.objects.create(**validated_data)
-    return water_consumption
+    images_data = validated_data.pop('images')
+    foods_data = validated_data.pop('consumptions')
+    post = FoodPost.objects.create(**validated_data)
+    # print(f"IMG_DATA : {images_data}")
+    # print(f"IMG_DATA_LIST : {list(images_data)}")
+    # print(f"FOOD_DATA : {foods_data}")
+    image_list = []
+    food_list = []
 
-  def update(self, instance, validated_data):
-    instance.post = validated_data.get("post", instance.post)
-    instance.amount = validated_data.get("amount", instance.amount)
-    # instance.deprecated = validated_data.get("deprecated", instance.deprecated)
-    instance.save()
-    return instance
+    for image_data in images_data:
+      food_image = FoodImage.objects.create(**image_data)
+      food_image.post = post
+      food_image.save()
+      image_list.append(food_image)
+    for food_data in foods_data:
+      food_consumption = FoodConsumption.objects.create(**food_data)
+      food_consumption.post = post
+      food_consumption.save()
+      food_list.append(food_consumption)
 
-# 영양제 serializer - 역직렬화(JSON -> DB, deserializer에 사용)
+    # print(f"IMG_LIST: {image_list}")
+    # print(f"FOOD_LIST: {food_list}")
+
+    food_post = {
+      'id' : post.id,
+      'type' : post.type,
+      'created_at' : post.created_at,
+      'updated_at' : post.updated_at,
+      'author' : post.author,
+      'images' : image_list,
+      'consumptions' : food_list
+    }
+    return food_post # 여기서 에러나는듯 -> serializer 형식에 맞게 만들어서 보내줘야 할듯!!!
+
+# Supplement Seriaizers
+'''
 class SupplementSerializer(serializers.ModelSerializer):
   class Meta:
-    model = SupplementConsmption
-    # fields = '__all__'
-    exclude = ('supplement', 'amount',) # 검사만 제외한다는 것인지? 맵핑 자체를 안한다는 것인지? => "아예 맵핑에서 제외시킴 ㄷㄷ"
-    # 일단 supplement는 수기로 할당할 예정이고, supplement_amount는 아직 사용 여부X
+    model = SupplementPost
+    fields = '__all__' # edit시 프론트에서 image 필드는 입력받지 않도록 제한 필요!
+'''
 
-    def create(self, validated_data):
-      supplement_consumption = SupplementConsmption.objects.create(**validated_data)
-      return supplement_consumption
-
-    def update(self, instance, validated_data):
-      instance.post = validated_data.get("post", instance.post)
-      # instance.supplement = validated_data.get("supplement", instance.supplement)
-      instance.name = validated_data.get("name", instance.name)
-      instance.manufacturer = validated_data.get("manufacturer", instance.manufacturer)
-      # instance.amount = validated_data.get("amount", instance.amount)
-      instance.image = validated_data.get("image", instance.image)
-      instance.save()
-      return instance
-    
-# 영양제 serializer - 직렬화(DB -> JSON)에 사용
-class SupplementDetailSerializer(serializers.ModelSerializer):
+# Supplement 수정
+class SupplementConsumptionSerializer(serializers.ModelSerializer):
   class Meta:
-    model = SupplementConsmption
-    exclude = ('post', 'supplement', 'amount',) # 이 세가지 제외하고 모두 보여줄 것!
+    model = SupplementConsumption
+    fields = '__all__'
 
-# 이미지 처리
-class ImageDecodeSerializer(serializers.ModelSerializer):
+class SupplementPostSerializer(serializers.ModelSerializer):
+  consumptions = SupplementConsumptionSerializer(many=True)
+
+  class Meta:
+    model = SupplementPost
+    fields = ['id', 'type', 'created_at', 'updated_at', 'author', 'consumptions']
 
   def create(self, validated_data):
+    consumptions_data = validated_data.pop('consumptions')
+    post = SupplementPost.objects.create(**validated_data)
+
+    supplement_consumption_list = []
+
+    for consumption_data in consumptions_data:
+      supplement_consumption = SupplementConsumption.objects.create(**consumption_data)
+      supplement_consumption.post = post
+      supplement_consumption.save()
+      supplement_consumption_list.append(supplement_consumption)
+
+    # print(f"IMG_LIST: {image_list}")
+    # print(f"FOOD_LIST: {food_list}")
+
+    supplement_post = {
+      'id' : post.id,
+      'type' : post.type,
+      'created_at' : post.created_at,
+      'updated_at' : post.updated_at,
+      'author' : post.author,
+      'consumptions' : supplement_consumption_list
+    }
+    return supplement_post # 여기서 에러나는듯 -> serializer 형식에 맞게 만들어서 보내줘야 할듯!!!
+
+
+# Water Serializers
+class WaterSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = WaterPost
+    fields = '__all__'
+
+# Admin
+class FoodAdminConsumptionSerializer(serializers.ModelSerializer):
+  date = serializers.ReadOnlyField(source='post.created_at')
+  name = serializers.ReadOnlyField(source='food.name')
+  class Meta:
+    model = FoodConsumption
+    fields = '__all__'
+
+class FoodAdminImageSerializer(serializers.ModelSerializer):
+  date = serializers.ReadOnlyField(source='post.created_at')
+  class Meta:
+    model = FoodImage
+    # fields = ['image']
+    fields = '__all__'
+
+
+# CREATE 이미지 처리
+class ImageDecodeSerializer(serializers.ModelSerializer):
+
+  class Meta:
+    model = FoodImage
+    fields = '__all__'
+
+  def create(self, validated_data):
+    print(f"VALIDATED_DATE : {validated_data}")
+    print(f"SELF.CONTEXT : {self.context}")
     post = self.context.get("post")
     meal_type = self.context.get("meal_type")
     date_data = self.context.get("date")
-    num = self.context.get("num")
+    image_id = self.context.get("image_id")
+
 
     year = date_data.strftime('%Y')
     month = date_data.strftime('%m')
     day = date_data.strftime('%d')
     # print("context.get(\"images\") LOG:", self.context.get("images")) 
-    image_string = self.context.get("images") # String으로 들어옴! -> 시간 단축!
+    image_string = self.context.get("image_string") # String으로 들어옴! -> 시간 단축!
     header, data = image_string.split(';base64,')
     # header, data = image_string[num].split(';base64,') # 리스트째로 들어옴!
     data_format, ext = header.split('/')
     try:
+      # food = FoodImage.objects.create(post=post, image='', meal_type=meal_type) # 이미지 객체 생성하여 DB에 임시 저장(url은 빈 string) *
+      food_image = FoodImage.objects.get(id=image_id)
       image_data = base64.b64decode(data) # 이미지 파일 생성
       s3r = boto3.resource('s3', aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
       key = "%s"%(f'{year}/{month}/{day}')
-      s3r.Bucket(settings.AWS_STORAGE_BUCKET_NAME).put_object(Key=key+'/%s'%(f'{post.id}_{meal_type}_{num}.{ext}'), Body=image_data, ContentType='jpg')
-      aws_url = f'{settings.IMAGE_URL}/{year}/{month}/{day}/{post.id}_{meal_type}_{num}.{ext}'
-      FoodImage.objects.create(post=post, image=aws_url, meal_type=meal_type) # 이미지 객체 생성하여 DB에 저장
-
+      s3r.Bucket(settings.AWS_STORAGE_BUCKET_NAME).put_object(Key=key+'/%s'%(f'{post}_{meal_type}_{food_image.id}.{ext}'), Body=image_data, ContentType='jpg')
+      aws_url = f'{settings.IMAGE_URL}/{year}/{month}/{day}/{post}_{meal_type}_{food_image.id}.{ext}'
+      # FoodImage.objects.update(post=post, image=aws_url, meal_type=meal_type, partial=True) # 이미지 객체 생성하여 DB에 저장
+      food_image.image = aws_url # 위에서 생성된 food객체의 image_url 업데이트 *
+      food_image.save()
     except TypeError:
       self.fail('invalid_image')
       
-    return post
-
-  def update(self, instance, validated_data):
-    instance.post = validated_data.get("post", instance.post)
-    instance.image = validated_data.get("image", instance.image)
-    instance.meal_type = validated_data.get("meal_type", instance.meal_type)
-    instance.deprecated = validated_data.get("deprecated", instance.deprecated)
-    # instance.deprecated = validated_data.get("deprecated", instance.deprecated)
-    instance.save()
-    return instance
-  
-  class Meta:
-    model = FoodImage
-    fields = ('image', 'meal_type', 'deprecated')
-    # fields = '__all__'
+    return food_image

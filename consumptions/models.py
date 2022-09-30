@@ -1,59 +1,90 @@
 from django.db import models
-from posts.models import Post
+# from django.contrib.auth.models import User
+from accounts.models import User
 from foods.models import Food, Supplement
 
-# POST와 FOOD를 연결하는 중간 테이블(many-to-many)
-class Consumption(models.Model):
-  MEAL_CHOICES = (
+# BASE
+class BasePost(models.Model):
+  TYPE_CHOICES = (
     ('breakfast', '아침'),
     ('lunch', '점심'),
     ('dinner', '저녁'),
     ('snack', '간식'),
+    ('supplement', '영양제'),
+    ('water', '물'),
   )
+  type = models.CharField(max_length=12, choices=TYPE_CHOICES, default=' ')
+  created_at = models.DateTimeField(blank=True, null=True) # datetimefield 사용해야 범위로 가져올 수 있음!
+  updated_at = models.DateTimeField(auto_now=True)
 
-  post = models.ForeignKey(Post, on_delete=models.CASCADE)
-  food = models.ForeignKey(Food, on_delete=models.CASCADE)
-  amount = models.IntegerField(default=0)
-  meal_type = models.CharField(max_length=12, choices=MEAL_CHOICES, default=' ') 
-  deprecated = models.BooleanField(default=False)
+  class Meta:
+    abstract = True
 
-  def __str__(self):
-    return f'[post_no.{self.post.id}]{self.food}, {self.amount}, {self.meal_type}'
-
-class WaterConsumption(models.Model):
-  post = models.ForeignKey(Post, on_delete=models.CASCADE)
-  amount = models.IntegerField(default=0) # 입력 받은 값으로 계속 수정되게만 구현하면 됨! (필수 입력X)
+# FOOD
+class FoodPost(BasePost):
+  author = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
 
   def __str__(self):
-    return f'[post_no.{self.post.id}] {self.amount}'
-
-class SupplementConsmption(models.Model):
-  post = models.ForeignKey(Post, on_delete=models.CASCADE)
-  # supplement = models.IntegerField(default=0) # FK 안쓰는 경우
-  supplement = models.ForeignKey(Supplement, on_delete=models.SET_NULL, blank=True, null=True) # 나중에 DB에 인스턴스 생성 후 연결
-  name = models.CharField(max_length=100)
-  manufacturer = models.CharField(max_length=100)
-  amount = models.IntegerField(default=0) # 임시 필드
-  image = models.CharField(max_length=250, blank=True)  # S3 주소 저장
-  deprecated = models.BooleanField(default=False) # 삭제 로직 구현
-
-  def __str__(self):
-    return f'[post_no.{self.post.id}] {self.name}'
+    return f'[{self.pk}]{self.created_at}||{self.author}\'s {self.type}' # 이래도 나중에 성능 괜찮을까..??
+    # return f'[{self.pk}]{str(self.created_at)[:10]}|{self.author}\'s {self.type}' # 이래도 나중에 성능 괜찮을까..??
 
 class FoodImage(models.Model):
-  MEAL_CHOICES = (
-    ('breakfast', '아침'),
-    ('lunch', '점심'),
-    ('dinner', '저녁'),
-    ('snack', '간식'),
-  )
-  post = models.ForeignKey(Post, on_delete=models.CASCADE)
-  # post = models.IntegerField(default=0)
-  # image = models.ImageField(upload_to='post/images/%Y/%m/%d', blank=True)
+  post = models.ForeignKey(FoodPost, on_delete=models.CASCADE, null=True, blank=True)
   image = models.CharField(max_length=250, blank=True)
-  meal_type = models.CharField(max_length=12, choices=MEAL_CHOICES, default=' ')
-  deprecated = models.BooleanField(default=False)
+  def __str__(self):
+    return f'<{self.pk}>[post_no.{self.post.id}]{self.image}'
+    # return f'[post_no.{self.post}]{self.image}'
+
+class FoodConsumption(models.Model):
+  post = models.ForeignKey(FoodPost, on_delete=models.CASCADE, null=True, blank=True)
+  food = models.ForeignKey(Food, on_delete=models.CASCADE, null=True, blank=True)
+  amount = models.IntegerField(default=0)
+  def __str__(self):
+    return f'<{self.pk}>[post_no.{self.post.id}]'
+    # return f'<{self.pk}>[post_no.{self.post.id}]{self.food.name}, {self.amount}'
+
+# SUPPLEMENT
+# class SupplementPost(BasePost):
+#   author = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+
+#   def __str__(self):
+#     return f'[{self.pk}] {self.author}\'s post :: {self.created_at}'
+'''
+class SupplementPost(BasePost):
+  # post = models.ForeignKey(SupplementPost, on_delete=models.CASCADE, null=True, blank=True)
+  author = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+  supplement = models.ForeignKey(Supplement, on_delete=models.SET_NULL, blank=True, null=True, default=1) # 나중에 DB에 인스턴스 생성 후 연결
+  name = models.CharField(max_length=100, default='')
+  manufacturer = models.CharField(max_length=100, default='')
+  # amount = models.IntegerField(default=0) # 필요없을 듯
+  image = models.CharField(max_length=250, blank=True)  # S3 주소 저장
 
   def __str__(self):
-    return f'[post_no.{self.post.id}] {self.image} :: {self.id}'
-  
+    return f'[{self.pk}] {self.author}\'s post :: {self.created_at}'
+'''
+
+# Supplement 수정
+class SupplementPost(BasePost):
+  author = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+
+  def __str__(self):
+    return f'[{self.pk}] {self.author}\'s post :: {self.created_at}'
+
+class SupplementConsumption(models.Model):
+  post = models.ForeignKey(SupplementPost, on_delete=models.CASCADE, null=True, blank=True)
+  supplement = models.ForeignKey(Supplement, on_delete=models.SET_NULL, blank=True, null=True, default=1) # 나중에 DB에 인스턴스 생성 후 연결
+  name = models.CharField(max_length=100)
+  manufacturer = models.CharField(max_length=100)
+  image = models.CharField(max_length=250, blank=True)  # S3 주소 저장
+  def __str__(self):
+    return f'<{self.pk}>[post_no.{self.post.id}]{self.name}, {self.manufacturer}'
+
+
+# WATER
+class WaterPost(BasePost):
+  author = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+  amount = models.IntegerField(default=0)
+
+  def __str__(self):
+    return f'[{self.pk}]{self.author}\'s post :: {self.amount} ({self.created_at})'
+
