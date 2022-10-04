@@ -39,7 +39,7 @@ def get_secret(setting):
 
 SECRET_KEY = get_secret("SECRET_KEY")
 DEBUG = config('DEBUG', default=False, cast=bool)
-#DEBUG = True
+# DEBUG = True
 AWS_ACCESS_KEY_ID = get_secret("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = get_secret("AWS_SECRET_ACCESS_KEY")
 
@@ -208,7 +208,7 @@ DATABASES = {
     }
 }
 
-# HEROKU
+# # LOCAL
 # DATABASES = {
 #     "default": {
 #         "ENGINE": "django.db.backends.sqlite3",
@@ -257,6 +257,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Heroku: Update database configuration from $DATABASE_URL.
-import dj_database_url
-db_from_env = dj_database_url.config(conn_max_age=500)
-DATABASES['default'].update(db_from_env)
+# import dj_database_url
+# db_from_env = dj_database_url.config(conn_max_age=500)
+# DATABASES['default'].update(db_from_env)
