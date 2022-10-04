@@ -14,7 +14,11 @@ from django.http import JsonResponse
 from dj_rest_auth.models import get_token_model
 from dj_rest_auth.utils import jwt_encode
 from dj_rest_auth.app_settings import create_token
-from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken 
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+# LOGOUT
+from dj_rest_auth.views import LogoutView
+from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth import logout as django_logout
 
 class CustomLoginView(LoginView):
 
@@ -149,3 +153,74 @@ class CustomTokenRefreshView(TokenViewBase):
         return response
 
 # token_refresh = TokenRefreshView.as_view()
+
+# LOGOUT
+class CustomLogoutView(LogoutView):
+
+    def logout(self, request):
+        # print(f"TEST : {request.user.auth_token}")
+        try:
+            # print(f"TEST : {request.user.auth_token}")
+            request.user.auth_token.delete()
+        except (AttributeError, ObjectDoesNotExist):
+            pass
+
+        if getattr(settings, 'REST_SESSION_LOGIN', True):
+            django_logout(request)
+
+        response = Response(
+            {'detail': _('Successfully logged out.')},
+            status=status.HTTP_200_OK,
+        )
+
+        if getattr(settings, 'REST_USE_JWT', False):
+            # NOTE: this import occurs here rather than at the top level
+            # because JWT support is optional, and if `REST_USE_JWT` isn't
+            # True we shouldn't need the dependency
+            from rest_framework_simplejwt.exceptions import TokenError
+            from rest_framework_simplejwt.tokens import RefreshToken
+
+            from dj_rest_auth.jwt_auth import unset_jwt_cookies
+            cookie_name = getattr(settings, 'JWT_AUTH_COOKIE', None)
+
+            # 없어도 되나?
+            unset_jwt_cookies(response)
+
+            if 'rest_framework_simplejwt.token_blacklist' in settings.INSTALLED_APPS:
+                # add refresh token to blacklist
+                try:
+                    # 기존
+                    # token = RefreshToken(request.data['refresh'])
+                    # 수정
+                    # print(request.COOKIES.get('my-refresh-token'))
+                    input_refresh_token = request.COOKIES.get('my-refresh-token')
+                    # print(input_refresh_token)
+                    if input_refresh_token == None:
+                        response.data = {'detail': 'request header에 refresh token이 없습니다.'}
+                        response.status_code = status.HTTP_404_NOT_FOUND
+                    token = RefreshToken(input_refresh_token)
+                    token.blacklist()
+                except KeyError:
+                    response.data = {'detail': _('Refresh token was not included in request data.')}
+                    response.status_code =status.HTTP_401_UNAUTHORIZED
+                except (TokenError, AttributeError, TypeError) as error:
+                    if hasattr(error, 'args'):
+                        if 'Token is blacklisted' in error.args or 'Token is invalid or expired' in error.args:
+                            response.data = {'detail': _(error.args[0])}
+                            response.status_code = status.HTTP_401_UNAUTHORIZED
+                        else:
+                            response.data = {'detail': _('An error has occurred.')}
+                            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+                    else:
+                        response.data = {'detail': _('An error has occurred.')}
+                        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+            elif not cookie_name:
+                message = _(
+                    'Neither cookies or blacklist are enabled, so the token '
+                    'has not been deleted server side. Please make sure the token is deleted client side.',
+                )
+                response.data = {'detail': message}
+                response.status_code = status.HTTP_200_OK
+        return response
