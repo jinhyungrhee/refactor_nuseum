@@ -196,10 +196,15 @@ class CustomLogoutView(LogoutView):
                     input_refresh_token = request.COOKIES.get('my-refresh-token')
                     # print(input_refresh_token)
                     if input_refresh_token == None:
-                        response.data = {'detail': 'cookie에 refresh token이 없습니다.'}
-                        response.status_code = status.HTTP_404_NOT_FOUND
-                    token = RefreshToken(input_refresh_token)
-                    token.blacklist()
+                        # response.data = {'detail': 'cookie에 refresh token이 없습니다.'}
+                        response.data  = {
+                            'err_msg' : 'cookie에 refresh token이 없습니다.',
+                            'err_code' : 'NOT_ACCEPTABLE'
+                        }
+                        response.status_code = status.HTTP_406_NOT_ACCEPTABLE
+                    else:
+                        token = RefreshToken(input_refresh_token)
+                        token.blacklist()
                 except KeyError:
                     response.data = {'detail': _('Refresh token was not included in request data.')}
                     response.status_code =status.HTTP_401_UNAUTHORIZED

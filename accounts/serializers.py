@@ -112,8 +112,15 @@ class CustomTokenRefreshSerializer(serializers.Serializer):
 
         # request header에서 access token 추출 (**Bearer parsing 필요!**)
         # DEPLOY
-        token = self.context['request'].META['HTTP_AUTHORIZATION'].split(" ")[1]
-        
+        try:
+            token = self.context['request'].META['HTTP_AUTHORIZATION'].split(" ")[1]
+        except KeyError:
+            data = {
+                'err_msg' : 'request header에 Authorization 필드(access token)가 존재하지 않습니다.',
+                'err_code' : 'NOT_ACCEPTABLE'
+            }
+            return data
+
         # refresh = self.token_class(attrs["refresh"])
         # print(self.context['request'].META)
         # print(f"my-refresh-token : {self.context['request'].COOKIES.get('my-refresh-token')}")
