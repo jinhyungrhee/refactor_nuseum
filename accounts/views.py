@@ -196,7 +196,7 @@ class CustomLogoutView(LogoutView):
                     input_refresh_token = request.COOKIES.get('my-refresh-token')
                     # print(input_refresh_token)
                     if input_refresh_token == None:
-                        response.data = {'detail': 'request header에 refresh token이 없습니다.'}
+                        response.data = {'detail': 'cookie에 refresh token이 없습니다.'}
                         response.status_code = status.HTTP_404_NOT_FOUND
                     token = RefreshToken(input_refresh_token)
                     token.blacklist()
