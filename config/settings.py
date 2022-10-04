@@ -122,8 +122,8 @@ from datetime import timedelta
 
 SIMPLE_JWT = {
     # deploy
-    'ACCESS_TOKEN_LIFETIME' : timedelta(minutes=1),
-    'REFRESH_TOKEN_LIFETIME' : timedelta(minutes=5),
+    'ACCESS_TOKEN_LIFETIME' : timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME' : timedelta(weeks=1),
     # test
     # 'ACCESS_TOKEN_LIFETIME' : timedelta(minutes=2),
     # 'REFRESH_TOKEN_LIFETIME' : timedelta(minutes=1),
