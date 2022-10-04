@@ -40,8 +40,8 @@ class FoodConsumption(models.Model):
   food = models.ForeignKey(Food, on_delete=models.CASCADE, null=True, blank=True)
   amount = models.IntegerField(default=0)
   def __str__(self):
-    return f'<{self.pk}>[post_no.{self.post.id}]'
-    # return f'<{self.pk}>[post_no.{self.post.id}]{self.food.name}, {self.amount}'
+    # return f'<{self.pk}>[post_no.{self.post.id}]'
+    return f'<{self.pk}>[post_no.{self.post.id}]{self.food.name}, {self.amount}'
 
 # SUPPLEMENT
 # class SupplementPost(BasePost):
