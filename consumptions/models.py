@@ -77,7 +77,7 @@ class SupplementConsumption(models.Model):
   manufacturer = models.CharField(max_length=100)
   image = models.CharField(max_length=250, blank=True)  # S3 주소 저장
   def __str__(self):
-    return f'<{self.pk}>[post_no.{self.post.id}]{self.name}, {self.manufacturer}'
+    return f'<{self.pk}>[pno.{self.post.id} - {self.post.author}]{self.name}, {self.manufacturer}'
 
 
 # WATER
