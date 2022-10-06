@@ -261,3 +261,60 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # import dj_database_url
 # db_from_env = dj_database_url.config(conn_max_age=500)
 # DATABASES['default'].update(db_from_env)
+
+# ======================= LOGGING TEST ==================================================
+from os.path import join
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'fileFormat': {
+            'format': '[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s',
+            'datefmt': '%d/%b/%Y %H:%M:%S'
+        },
+        'consoleFormat' : {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'consoleFormat',
+        },
+        'debug_log': {
+            'level': 'DEBUG',
+            'encoding': 'utf-8',
+            # 'class': 'logging.FileHandler',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': join(BASE_DIR, 'logs/logfile.log'),
+            'maxBytes': 1024*1024*5,
+            'backupCount': 5,
+            'formatter': 'fileFormat'
+        },
+        'error_log': {
+            'level': 'ERROR',
+            'encoding': 'utf-8',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': join(BASE_DIR, 'logs/logfile.log'),
+            'maxBytes': 1024*1024*5,
+            'backupCount': 5,
+            'formatter': 'fileFormat',
+        },
+
+    },
+    'loggers': {
+        'django.db.backends': {
+            # 'handlers': ['debug_log', 'console'], # aws
+            'handlers': ['console', 'error_log'],
+            # 'level': 'DEBUG', # SQL문까지 확인 가능
+            'level': 'INFO',
+        },
+        'django.request': {
+            'handlers': ['error_log'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+    }
+}

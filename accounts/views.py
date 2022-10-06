@@ -43,12 +43,12 @@ class CustomLoginView(LoginView):
             # 토큰 생성 => REFRESH 체크
             # 이때 user_id의 가장 최근(latest) token을 outstanding/blacklistedtoken 테이블에서 확인
             # => 가장 최근에 발급된 해당유저의 refresh 토큰이 blacklistedtoken에 존재하는지 확인 
-            print(OutstandingToken.objects.filter(user_id=self.user).latest('created_at').id)
+            # print(OutstandingToken.objects.filter(user_id=self.user).latest('created_at').id)
             latest_refresh_token = OutstandingToken.objects.filter(user_id=self.user).latest('created_at')
             # print(BlacklistedToken.objects.get(token_id=latest_refresh_token_id)) # 없으면 에러 발생 -> 생성X
-            print(BlacklistedToken.objects.filter(token_id=latest_refresh_token.id)) # 없으면 빈 리스트 -> 생성O
+            # print(BlacklistedToken.objects.filter(token_id=latest_refresh_token.id)) # 없으면 빈 리스트 -> 생성O
             # check : 로그아웃 된 적 없이 다시 로그인이 된다면... (이 경우 브라우저를 닫아도 자동적으로 로그아웃(blacklist에 저장)되는 로직 필요?) 
-            print(f"유저의 가장 최근 REFRESH TOKEN이 blacklist에 존재하는지 CHECK(정상 로그아웃됨): {BlacklistedToken.objects.filter(token_id=latest_refresh_token.id).exists()}")
+            # print(f"유저의 가장 최근 REFRESH TOKEN이 blacklist에 존재하는지 CHECK(정상 로그아웃됨): {BlacklistedToken.objects.filter(token_id=latest_refresh_token.id).exists()}")
             if not BlacklistedToken.objects.filter(token_id=latest_refresh_token.id).exists():
                 BlacklistedToken.objects.create(token_id=latest_refresh_token.id)
                 self.access_token, self.refresh_token = "", ""

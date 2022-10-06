@@ -18,7 +18,8 @@ from django.http import JsonResponse
 class CustomRegisterSerializer(RegisterSerializer):
 
   def validate_username(self, username):
-        codes = ['사과', '오이', '호박', '당근' , '시금치', '열무' , '토란', '감자', '브로콜리', '양배추', '비트', '테스트1', '테스트2', '테스트3', '테스트4', '테스트5', 'nuseum'] # 30명 코드
+        codes = ['사과', '오이', '호박', '당근' , '시금치', '열무' , '토란', '감자', '브로콜리', '양배추', '비트', '테스트1', '테스트2', '테스트3', '테스트4', '테스트5', 'nuseum',
+        'NPP01', 'NPP02', 'NPP03', 'NPP04', 'NPP05', 'NPP06', 'NPP07', 'NPP08', 'NPP09', 'NPP10', 'NPP11', 'NPP12', 'NPP13', 'NPP14', 'NPP15', 'NPP16', 'NPP17', 'NPP18', 'NPP19', 'NPP20']
         username = get_adapter().clean_username(username)
         if username not in codes:
           raise serializers.ValidationError(_("올바른 코드를 입력하세요!"))
@@ -132,7 +133,7 @@ class CustomTokenRefreshSerializer(serializers.Serializer):
             }
             return data
         refresh = self.token_class(self.context['request'].COOKIES.get('my-refresh-token'))
-        print(refresh)
+        # print(refresh)
         if not token:
             raise AuthenticationError('UnAuthenticated!')
         try: # access 토큰 만료 X
