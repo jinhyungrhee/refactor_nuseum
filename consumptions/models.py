@@ -25,14 +25,14 @@ class FoodPost(BasePost):
   author = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
 
   def __str__(self):
-    return f'[{self.pk}]{self.created_at}||{self.author}\'s {self.type}' # 이래도 나중에 성능 괜찮을까..??
+    return f'[{self.pk}] {self.author}\'s {self.type} ({str(self.created_at).split()[0]})' # 이래도 나중에 성능 괜찮을까..??
     # return f'[{self.pk}]{str(self.created_at)[:10]}|{self.author}\'s {self.type}' # 이래도 나중에 성능 괜찮을까..??
 
 class FoodImage(models.Model):
   post = models.ForeignKey(FoodPost, on_delete=models.CASCADE, null=True, blank=True)
   image = models.CharField(max_length=250, blank=True)
   def __str__(self):
-    return f'<{self.pk}>[pno.{self.post.id} - {self.post.author}]{self.image}'
+    return f'[{self.pk}][pno.{self.post.id} - {self.post.author}] {self.image} ({str(self.post.created_at).split()[0]})'
     # return f'[post_no.{self.post}]{self.image}'
 
 class FoodConsumption(models.Model):
@@ -41,7 +41,7 @@ class FoodConsumption(models.Model):
   amount = models.IntegerField(default=0)
   def __str__(self):
     # return f'<{self.pk}>[post_no.{self.post.id}]'
-    return f'<{self.pk}>[pno.{self.post.id} - {self.post.author}]{self.food.name}, {self.amount}'
+    return f'[{self.pk}][pno.{self.post.id} - {self.post.author}] {self.food.name}, {self.amount} ({str(self.post.created_at).split()[0]})'
 
 # SUPPLEMENT
 # class SupplementPost(BasePost):
@@ -68,7 +68,7 @@ class SupplementPost(BasePost):
   author = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
 
   def __str__(self):
-    return f'[{self.pk}] {self.author}\'s post :: {self.created_at}'
+    return f'[{self.pk}] {self.author}\'s supplement ({str(self.created_at).split()[0]})'
 
 class SupplementConsumption(models.Model):
   post = models.ForeignKey(SupplementPost, on_delete=models.CASCADE, null=True, blank=True)
@@ -77,7 +77,7 @@ class SupplementConsumption(models.Model):
   manufacturer = models.CharField(max_length=100)
   image = models.CharField(max_length=250, blank=True)  # S3 주소 저장
   def __str__(self):
-    return f'<{self.pk}>[pno.{self.post.id} - {self.post.author}]{self.name}, {self.manufacturer}'
+    return f'[{self.pk}][pno.{self.post.id} - {self.post.author}] {self.name}, {self.manufacturer} ({str(self.post.created_at).split()[0]})'
 
 
 # WATER
@@ -86,5 +86,5 @@ class WaterPost(BasePost):
   amount = models.IntegerField(default=0)
 
   def __str__(self):
-    return f'[{self.pk}]{self.author}\'s post :: {self.amount} ({self.created_at})'
+    return f'[{self.pk}] {self.author}\'s amount : {self.amount} ({str(self.created_at).split()[0]})'
 
