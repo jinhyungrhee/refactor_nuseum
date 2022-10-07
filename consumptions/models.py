@@ -32,7 +32,7 @@ class FoodImage(models.Model):
   post = models.ForeignKey(FoodPost, on_delete=models.CASCADE, null=True, blank=True)
   image = models.CharField(max_length=250, blank=True)
   def __str__(self):
-    return f'[{self.pk}][pno.{self.post.id} - {self.post.author}] {self.image} ({str(self.post.created_at).split()[0]})'
+    return f'[{self.pk}][pno.{self.post.id} - {self.post.author}] {self.image} ({str(self.post.created_at).split()[0]} {self.post.type})'
     # return f'[post_no.{self.post}]{self.image}'
 
 class FoodConsumption(models.Model):
@@ -41,7 +41,7 @@ class FoodConsumption(models.Model):
   amount = models.IntegerField(default=0)
   def __str__(self):
     # return f'<{self.pk}>[post_no.{self.post.id}]'
-    return f'[{self.pk}][pno.{self.post.id} - {self.post.author}] {self.food.name}, {self.amount} ({str(self.post.created_at).split()[0]})'
+    return f'[{self.pk}][pno.{self.post.id} - {self.post.author}] {self.food.name}, {self.amount} ({str(self.post.created_at).split()[0]} {self.post.type})'
 
 # SUPPLEMENT
 # class SupplementPost(BasePost):
