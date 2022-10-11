@@ -14,9 +14,9 @@ class FoodsView(APIView):
     paginator =PageNumberPagination()
     paginator.page_size = 10000
     search_query = request.GET.get("search", None)
-    print(search_query)
+    # print(search_query)
     if search_query != None:
-      foods = Food.objects.filter(Q(name__icontains=search_query)).order_by('classifier')
+      foods = Food.objects.filter(Q(name__icontains=search_query)).order_by('classifier', 'id')
     else: # 쿼리가 없으면 전체 음식 출력
       foods = Food.objects.all()
     results = paginator.paginate_queryset(foods, request)
