@@ -25,5 +25,8 @@ urlpatterns = [
   path('month/', views.MonthNutrientView.as_view()),
   # admin
   path('admin/', views.AdminView.as_view()),
-
+  # admin - 식이분석(쿼리파라미터 : 유저명, 날짜)
+  path('admin/day/', views.AdminDayView().as_view()),
+  path('admin/week/', views.AdminWeekView().as_view()),
+  path('admin/month/', views.AdminMonthView().as_view()),
 ]

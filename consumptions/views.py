@@ -794,3 +794,92 @@ class AdminView(APIView):
       # 날짜 오름차순 정렬
       admin_data = dict(sorted(admin_data.items()))
       return Response(data=admin_data)
+
+# ADMIN DAY/WEEK/MONTH : 관리자 식이분석 페이지(사용자명과 날짜를 입력하면 일별/주별/월별 식이분석 결과 출력)
+class AdminDayView(APIView):
+
+  def get(self, request):
+    author_string = self.request.GET.get('author', None)
+    if author_string is None:
+      data = {
+        'error_msg' : '올바른 사용자 코드를 입력하세요.'
+      }
+      return Response(status=status.HTTP_404_NOT_FOUND, data=data)
+    author = User.objects.get(username=author_string)
+    # print(f"AUTHOR : {author}")
+
+    date = self.request.GET.get('date', None)
+    int_date = convert_to_int_date(date)
+    if int_date is None:
+      data = {
+        'error_msg' : '올바른 날짜를 입력하세요.'
+      }
+      return Response(status=status.HTTP_404_NOT_FOUND, data=data)
+
+    date = datetime.fromtimestamp(int_date/1000)
+    # 아침/점심/저녁/간식 영양소
+    food_posts = list(FoodPost.objects.filter(author=author, created_at=date).values('id'))
+    day_food_data = FoodConsumption.objects.none() # 빈 쿼리셋 생성
+    for i in range(len(food_posts)):
+      day_food_data |= FoodConsumption.objects.filter(post=food_posts[i]['id'])
+    # 물 정보 가져오기
+    day_water_data = WaterPost.objects.filter(author=author, created_at=date)
+    # 영양제 정보 가져오기
+    supplement_posts = SupplementPost.objects.filter(author=author, created_at=date)
+    day_supplement_data = SupplementConsumption.objects.none() # 빈 쿼리셋 생성
+    for i in range(len(supplement_posts)):
+      day_supplement_data |= supplement_posts[i].supplementconsumption_set.all()
+
+    reporting_date = count_reporting_date(date, author, "day")
+    sum_day_data = nutrient_calculator(day_food_data, day_supplement_data, day_water_data, reporting_date)
+    return Response(data=sum_day_data)
+
+class AdminWeekView(APIView):
+
+  def get(self, request):
+    author_string = self.request.GET.get('author', None)
+    author = User.objects.get(username=author_string)
+    date = self.request.GET.get('date', None)
+    today_date = datetime.fromtimestamp(int(date)/1000)
+    a_week_ago = datetime.fromtimestamp((int(date) - 518400000)/1000)
+    week_food_posts = FoodPost.objects.filter(author=author, created_at__lte=today_date, created_at__gte=a_week_ago).order_by('created_at')
+    week_food_data = FoodConsumption.objects.none() # 빈 쿼리셋
+    for i in range(len(week_food_posts)):
+      week_food_data |= week_food_posts[i].foodconsumption_set.all()
+    
+    week_supplement_posts = SupplementPost.objects.filter(author=author, created_at__lte=today_date, created_at__gte=a_week_ago).order_by('created_at')
+    week_supplement_data = SupplementConsumption.objects.none() # 빈 쿼리셋 생성
+    for i in range(len(week_supplement_posts)):
+      week_supplement_data |= week_supplement_posts[i].supplementconsumption_set.all()
+
+    week_water_data = WaterPost.objects.filter(author=author, created_at__lte=today_date, created_at__gte=a_week_ago).order_by('created_at')
+
+    reporting_date = count_reporting_date(today_date, author, "week")
+    sum_week_data = nutrient_calculator(week_food_data, week_supplement_data, week_water_data, reporting_date)
+
+    return Response(data=sum_week_data)
+
+class AdminMonthView(APIView):
+
+  def get(self, request):
+    author_string = self.request.GET.get('author', None)
+    author = User.objects.get(username=author_string)
+    date = self.request.GET.get('date', None)
+    today_date = datetime.fromtimestamp(int(date)/1000)
+    a_week_ago = datetime.fromtimestamp((int(date) - 2592000000)/1000)
+    month_food_posts = FoodPost.objects.filter(author=author, created_at__lte=today_date, created_at__gte=a_week_ago).order_by('created_at')
+    month_food_data = FoodConsumption.objects.none() # 빈 쿼리셋
+    for i in range(len(month_food_posts)):
+      month_food_data |= month_food_posts[i].foodconsumption_set.all()
+    
+    month_supplement_posts = SupplementPost.objects.filter(author=author, created_at__lte=today_date, created_at__gte=a_week_ago).order_by('created_at')
+    month_supplement_data = SupplementConsumption.objects.none() # 빈 쿼리셋 생성
+    for i in range(len(month_supplement_posts)):
+      month_supplement_data |= month_supplement_posts[i].supplementconsumption_set.all()
+
+    month_water_data = WaterPost.objects.filter(author=author, created_at__lte=today_date, created_at__gte=a_week_ago).order_by('created_at')
+
+    reporting_date = count_reporting_date(today_date, author, "month")
+    sum_month_data = nutrient_calculator(month_food_data, month_supplement_data, month_water_data, reporting_date)
+
+    return Response(data=sum_month_data)
