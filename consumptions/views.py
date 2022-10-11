@@ -661,7 +661,7 @@ class AdminView(APIView):
   def get(self, request):
     author = request.GET.get('author', None)
     if author is None:
-      user_list = User.objects.filter(is_superuser=False)
+      user_list = User.objects.filter(is_superuser=False, is_staff=False)
       data = {
         'userList' : user_list
       }
