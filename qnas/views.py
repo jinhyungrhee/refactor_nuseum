@@ -45,7 +45,7 @@ class QuestionDetailAPIView(RetrieveAPIView):
     instance = self.get_object()
     #  prevInstance, nextInstance = get_prev_next(instance)
     # 접근 권한 제한
-    if self.request.user != instance.author and self.request.user.is_superuser != True: # 후에 is_staff 추가
+    if self.request.user != instance.author and self.request.user.is_superuser != True and self.request.user.is_staff != True: # 후에 is_staff 추가
       data = {
         'vallidation_error' : '작성자 본인 또는 관리자만 조회할 수 있습니다.'
       }
