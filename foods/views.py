@@ -12,7 +12,7 @@ class FoodsView(APIView):
 
   def get(self, request):
     paginator =PageNumberPagination()
-    paginator.page_size = 10000
+    paginator.page_size = 10
     search_query = request.GET.get("search", None)
     # print(search_query)
     if search_query != None:
