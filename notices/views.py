@@ -23,7 +23,8 @@ class NoticeAPIView(APIView):
       else: 
         isread = 0  
       # setattr(notices[i], str(user), isread)  
-      fnotices[i][str(user)] = isread 
+      # fnotices[i][str(user)] = isread 
+      fnotices[i]['is_read'] = isread # key 변경
       # print(notices[i].NPP01) 
 
     return Response(data=fnotices)
