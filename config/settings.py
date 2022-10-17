@@ -92,6 +92,7 @@ INSTALLED_APPS = [
     'foods',
     'accounts',
     'qnas',
+    'notices',
 ]
 
 # rest_framework

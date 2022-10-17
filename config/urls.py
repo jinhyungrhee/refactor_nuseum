@@ -23,4 +23,5 @@ urlpatterns = [
     path('api/v1/consumption/', include('consumptions.urls')),
     path('api/v1/food/', include('foods.urls')),
     path('api/v1/qna/', include("qnas.urls")),
+    path('api/v1/notice/', include("notices.urls")),
 ]
