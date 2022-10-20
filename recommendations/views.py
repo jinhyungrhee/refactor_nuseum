@@ -9,7 +9,7 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdate
 from datetime import datetime
 
 # Create your views here.
-TYPE_MAPPER = ['과일', '채소', '콩/두부', '통곡물', '버섯', '해조류', '견과', '고기/생선/달걀', '유제품', '가공 식품', '영양제']
+TYPE_MAPPER = ['과일', '채소', '콩/두부', '통곡물', '버섯', '해조류', '견과', '고기/생선/달걀', '유제품', '가공 식품', '영양제', '주의']
 
 # GET api 두 개 필요
 # 1) 사용자 GET : self.request.user과 쿼리 파라미터 date 사용 - LIST / RETRIEVE
@@ -36,7 +36,7 @@ class RecommendationUserDetailView(RetrieveAPIView):
   def retrieve(self, request, *args, **kwargs):
     instance = self.get_object()
     data = []
-    for i in range(11):
+    for i in range(12):
       # print(recommendation[0][f'type{i+1}'])
       # type_num = f'type{i+1}'
       temp_list = instance.get_type(i+1).split('|')  #어떻게 처리해야 할지 모르겟음 ㅠㅠ
@@ -44,12 +44,22 @@ class RecommendationUserDetailView(RetrieveAPIView):
       temp_data = {
         'type' : TYPE_MAPPER[i],
         'main' : temp_list[0],
-        'list' : temp_list[1:]
+        'list' : temp_list[1:-1],
+        'order' : int(temp_list[-1])
       }
       # print(temp_data)
+      if temp_list[-1] == "-1": # -1인 데이터 제거
+        continue
       data.append(temp_data)
-    serializer = self.get_serializer(data, many=True)
-    return Response(serializer.data)
+    # data 결과 ordering으로 정렬
+    data = sorted(data, key=lambda x: x['order'])
+    result = {
+      'data' : data,
+      'comment' : instance.comment
+    }
+    return Response(data=result)
+    # serializer = self.get_serializer(data, many=True)
+    # return Response(serializer.data)
 
 # class RecommendationUserDetailView(APIView):
 
@@ -89,8 +99,6 @@ class RecommendationUserDetailView(RetrieveAPIView):
 # 연구원 GET / POST api
 class RecommendationAdminCreateView(APIView):
   
-  # TYPE_MAPPER = ['과일', '채소', '콩/두부', '통곡물', '버섯', '해조류', '견과', '고기/생선/달걀', '유제품', '가공 식품', '영양제']
-
   def get(self, request):
     date = self.request.GET.get('date', None)
     # 예외처리
@@ -111,20 +119,22 @@ class RecommendationAdminCreateView(APIView):
     else:
       result  = {}
       data = []
-      for i in range(11):
+      for i in range(12):
         # print(recommendation[0][f'type{i+1}'])
         temp_list = recommendation[0][f'type{i+1}'].split('|')
-        # print(temp_list)
+        # 주의 추가 **
         temp_data = {
           'type' : TYPE_MAPPER[i],
           'main' : temp_list[0],
-          'list' : temp_list[1:]
+          'list' : temp_list[1:-1],
+          'order' : int(temp_list[-1])
         }
         # print(temp_data)
         data.append(temp_data)
       # PATCH / DELETE에 사용하기 위한 ID 값 추가
       result = {
         'data' : data,
+        'comment' : recommendation[0]['comment'], # 코멘트 추가
         'id' : recommendation[0]['id']
       }
       return Response(data=result)
@@ -135,19 +145,21 @@ class RecommendationAdminCreateView(APIView):
     date_data = datetime.fromtimestamp(int(request.data['created_at'])/1000)
     data =  {
       'target' : request.data['target'],
-      'created_at' : date_data
+      'created_at' : date_data,
+      'comment' : request.data['comment'] # 코멘트 추가
     }
     # print(data)
 
     recommendations = request.data['data']
     # print(recommendations)
     # QA 필요!!!
-    for i in range(11):
+    for i in range(12):
       result = ''
       result += recommendations[i]['main'] 
       for elem in recommendations[i]['list']:
         result = result + '|' + elem
-      # print(result)
+      # 주의 추가 **
+      result = result + '|' + str(recommendations[i]['order'])
       data[f'type{i+1}'] = result
 
     # print(data)
@@ -170,7 +182,7 @@ class RecommendationAdminUpdateView(RetrieveUpdateDestroyAPIView):
   def retrieve(self, request, *args, **kwargs):
     instance = self.get_object()
     data = []
-    for i in range(11):
+    for i in range(12):
       # print(recommendation[0][f'type{i+1}'])
       # type_num = f'type{i+1}'
       temp_list = instance.get_type(i+1).split('|')  #어떻게 처리해야 할지 모르겟음 ㅠㅠ
@@ -178,12 +190,18 @@ class RecommendationAdminUpdateView(RetrieveUpdateDestroyAPIView):
       temp_data = {
         'type' : TYPE_MAPPER[i],
         'main' : temp_list[0],
-        'list' : temp_list[1:]
+        'list' : temp_list[1:-1],
+        'order' : int(temp_list[-1])
       }
       # print(temp_data)
       data.append(temp_data)
-    serializer = self.get_serializer(data, many=True)
-    return Response(serializer.data)
+    result = {
+      'data' : data,
+      'comment' : instance.comment
+    }
+    return Response(data=result)
+    # serializer = self.get_serializer(data, many=True)
+    # return Response(serializer.data)
 
   # PATCH (내부적으로는 UPDATE로 동작)
   def patch(self, request, *args, **kwargs):
@@ -198,14 +216,16 @@ class RecommendationAdminUpdateView(RetrieveUpdateDestroyAPIView):
       recommendations = request.data['data']
       # print(recommendations)
       # QA 필요!!!
-      for i in range(11):
+      for i in range(12):
         result = ''
         result += recommendations[i]['main'] # 한 개 반드시 필요가 아니라 없을 수도... 없는 경우 예외처리 필요? 빈리스트로 들어오면 에러가 안뜰수도..!
         for elem in recommendations[i]['list']: # 개수만큼 돌기 때문에 없는 경우 저장 안 될듯?
           result = result + '|' + elem
-        # print(result)
+        # 주의 추가 **
+        result = result + '|' + str(recommendations[i]['order'])
         data[f'type{i+1}'] = result
-      # print(data)
+      # 코멘트 추가 **
+      data['comment'] = request.data['comment']
       serializer = RecommendationSerializer(instance, data=data, partial=partial)
       # serializer = self.get_serializer(instance, data=request.data, partial=partial)
       serializer.is_valid(raise_exception=True)
@@ -220,7 +240,8 @@ class RecommendationAdminUpdateView(RetrieveUpdateDestroyAPIView):
       data = {
         'type' : '',
         'main' : '',
-        'list' : serializer.data
+        'list' : serializer.data,
+        'order' : ''
       }
       # return Response(serializer.data)
       return Response(data=data)

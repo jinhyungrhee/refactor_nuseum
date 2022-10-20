@@ -23,6 +23,8 @@ class RecommendationSerializer(serializers.ModelSerializer):
       instance.type9 = validated_data.get('type9', instance.type9)
       instance.type10 = validated_data.get('type10', instance.type10)
       instance.type11 = validated_data.get('type11', instance.type11)
+      instance.type12 = validated_data.get('type12', instance.type12) # 주의 추가
+      instance.comment = validated_data.get('comment', instance.comment) # 코멘트 추가
       instance.save()
       return instance
 
@@ -52,3 +54,4 @@ class RecommendationDetailSerializer(serializers.Serializer):
   type = serializers.CharField()
   main = serializers.CharField()
   list = serializers.ListField()
+  order = serializers.CharField() # 중요도
