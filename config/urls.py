@@ -25,4 +25,5 @@ urlpatterns = [
     path('api/v1/qna/', include("qnas.urls")),
     path('api/v1/notice/', include("notices.urls")),
     path('api/v1/recommendation/', include("recommendations.urls")),
+    path('api/v1/result/', include('results.urls')),
 ]
