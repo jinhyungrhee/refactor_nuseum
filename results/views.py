@@ -10,12 +10,12 @@ class TempExaminationResultView(APIView):
         'user' : user,
         'data' : None
       }
-    elif user == 'NPP02' or user == '오이' or user == '사과' or user == 'nuseum':
+    elif user == 'NPP02' or user == '오이' or user == 'nuseum':
       data = {
         'user' : user,
         'data' : "https://s3.ap-northeast-2.amazonaws.com/jinhyung.test.aws/result/NPP02/2022.10.20+%EC%9D%BC%EB%B0%98%EA%B2%B0%EA%B3%BC%EC%A7%80+(NPP-02+%E3%84%B1%E3%85%8E%E3%84%B9).pdf"
       }
-    elif user == 'NPP04':
+    elif user == 'NPP04' or user == '사과':
       data = {
         'user' : user,
         'data' : "https://s3.ap-northeast-2.amazonaws.com/jinhyung.test.aws/result/NPP04/2022.10.20+%EC%9D%BC%EB%B0%98%EA%B2%B0%EA%B3%BC%EC%A7%80+(NPP-04+%E3%85%87%E3%85%85%E3%85%87).pdf"
