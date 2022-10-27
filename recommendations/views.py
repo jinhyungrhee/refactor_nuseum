@@ -136,7 +136,7 @@ class RecommendationAdminCreateView(APIView):
       result = {
         'data' : data,
         'comment' : recommendation[0]['comment'], # 코멘트 추가
-        'hastag' : recommendation[0]['hashtag'], # 해시태그 추가
+        'hashtag' : recommendation[0]['hashtag'], # 해시태그 추가
         'id' : recommendation[0]['id']
       }
       return Response(data=result)
