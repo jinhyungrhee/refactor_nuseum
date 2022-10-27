@@ -55,7 +55,8 @@ class RecommendationUserDetailView(RetrieveAPIView):
     data = sorted(data, key=lambda x: x['order'])
     result = {
       'data' : data,
-      'comment' : instance.comment
+      'comment' : instance.comment,
+      'hashtag' : instance.hashtag
     }
     return Response(data=result)
     # serializer = self.get_serializer(data, many=True)
@@ -135,6 +136,7 @@ class RecommendationAdminCreateView(APIView):
       result = {
         'data' : data,
         'comment' : recommendation[0]['comment'], # 코멘트 추가
+        'hastag' : recommendation[0]['hashtag'], # 해시태그 추가
         'id' : recommendation[0]['id']
       }
       return Response(data=result)
@@ -146,7 +148,8 @@ class RecommendationAdminCreateView(APIView):
     data =  {
       'target' : request.data['target'],
       'created_at' : date_data,
-      'comment' : request.data['comment'] # 코멘트 추가
+      'comment' : request.data['comment'], # 코멘트 추가
+      'hashtag' : request.data['hashtag'] # 해시태그 추가(없으면 빈 스트링으로라도 입력받아야 함)
     }
     # print(data)
 
@@ -197,7 +200,8 @@ class RecommendationAdminUpdateView(RetrieveUpdateDestroyAPIView):
       data.append(temp_data)
     result = {
       'data' : data,
-      'comment' : instance.comment
+      'comment' : instance.comment,
+      'hashtag' : instance.hashtag
     }
     return Response(data=result)
     # serializer = self.get_serializer(data, many=True)
@@ -226,6 +230,8 @@ class RecommendationAdminUpdateView(RetrieveUpdateDestroyAPIView):
         data[f'type{i+1}'] = result
       # 코멘트 추가 **
       data['comment'] = request.data['comment']
+      # 해시태그 추가
+      data['hashtag'] = request.data['hashtag']
       serializer = RecommendationSerializer(instance, data=data, partial=partial)
       # serializer = self.get_serializer(instance, data=request.data, partial=partial)
       serializer.is_valid(raise_exception=True)

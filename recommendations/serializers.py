@@ -25,6 +25,7 @@ class RecommendationSerializer(serializers.ModelSerializer):
       instance.type11 = validated_data.get('type11', instance.type11)
       instance.type12 = validated_data.get('type12', instance.type12) # 주의 추가
       instance.comment = validated_data.get('comment', instance.comment) # 코멘트 추가
+      instance.hashtag = validated_data.get('hashtag', instance.hashtag) # 해시태그 추가
       instance.save()
       return instance
 

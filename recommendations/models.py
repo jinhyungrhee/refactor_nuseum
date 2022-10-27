@@ -16,6 +16,7 @@ class Recommendation(models.Model):
   type11 = models.CharField(max_length=200, default='', null=True, blank=True)
   type12 = models.CharField(max_length=200, default='', null=True, blank=True) # 주의
   comment = models.TextField(default='', null=True, blank=True) # 코멘트
+  hashtag = models.CharField(max_length=255, default='', null=True, blank=True) # 해시태그
   # created_at = models.DateTimeField(auto_now_add=True)
   created_at = models.DateTimeField(blank=True, null=True)
 
