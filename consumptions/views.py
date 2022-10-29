@@ -1,7 +1,7 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView, RetrieveDestroyAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView, RetrieveDestroyAPIView, RetrieveUpdateAPIView, CreateAPIView
 from rest_framework import status
 from .serializers import FoodPostSerializer, FoodConsumptionSerializer, FoodPostImageSerializer, SupplementPostSerializer, SupplementConsumptionSerializer ,WaterSerializer, FoodAdminConsumptionSerializer, FoodAdminImageSerializer, ImageDecodeSerializer
 from .models import FoodPost, FoodImage, FoodConsumption, SupplementPost, SupplementConsumption, WaterPost
@@ -1027,3 +1027,56 @@ class AdminMonthView(APIView):
     sum_month_data = nutrient_calculator(month_food_data, month_supplement_data, month_water_data, reporting_date)
 
     return Response(data=sum_month_data)
+
+# admin - 사용자별 식단 수정(기존api)/삭제(기존api)/입력(새로운 api)
+# POST만 구현 (image는 모두 무시**)
+class AdminPostCreateView(CreateAPIView):
+  queryset = FoodPost.objects.all()
+  serializer_class = FoodPostSerializer
+
+  def create(self, request, *args, **kwargs):
+        # 예외처리 : 이상한 값 입력 시 예외처리
+        try:
+          image_list = [] # image 무시 **
+          consumption_list = request.data['consumptions']
+          meal_type = request.data['type']
+          created_at = request.data['created_at']
+          author = request.data['author'] # 작성자(target)
+        except KeyError:
+          data = {
+            'err_msg' : "입력한 JSON이 올바른 형태인지 확인해주세요 (fields: consumptions, type, created_at(unix time))"
+          }
+          return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
+
+        # 예외처리 : Food 입력 시 consumptions는 반드시 있어야 함(image는 모두 무시**)
+        if consumption_list == []:
+          data = {
+            "err_msg" : "음식 정보나 음식 이미지 둘 중 하나는 반드시 입력해야 합니다!" 
+          }
+          return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
+
+        # 예외처리
+        if meal_type not in MEAL_TYPE_LIST:
+          data = {
+            "err_msg" : "type은 반드시 breakfast, lunch, dinner, snack 중 하나여야 합니다!" 
+          }
+          return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
+
+        date_data = datetime.fromtimestamp(int(created_at)/1000)
+
+        # 입력받은 author 처리 필요
+        author_id = User.objects.get(username=author).id
+
+        data = {
+          "type" : meal_type,
+          "created_at" : date_data,
+          "author" : author_id, # FK
+          "images" : image_list, # []
+          "consumptions": consumption_list,
+        }
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        # print(f"최종 SERIALZIER.DATA : {serializer.data}") # 
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

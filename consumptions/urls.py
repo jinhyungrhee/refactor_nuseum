@@ -31,4 +31,6 @@ urlpatterns = [
   path('admin/analysis/day/', views.AdminDayView().as_view()),
   path('admin/analysis/week/', views.AdminWeekView().as_view()),
   path('admin/analysis/month/', views.AdminMonthView().as_view()),
+  # admin - 사용자별 식단 추가 입력
+  path('admin/addition/', views.AdminPostCreateView().as_view()),
 ]

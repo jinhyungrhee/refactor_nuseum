@@ -16,9 +16,9 @@ class IsOwnerorAdmin(BasePermission):
 
   def has_object_permission(self, request, view, obj):
     if type(obj) == FoodConsumption or type(obj) == FoodImage or type(obj) == SupplementConsumption:
-      return obj.post.author == request.user or request.user.is_superuser
+      return obj.post.author == request.user or request.user.is_superuser or request.user.is_staff # 스태프 권한 추가
     else: # WaterPost
-      return obj.author == request.user or request.user.is_superuser
+      return obj.author == request.user or request.user.is_superuser or request.user.is_staff
 
     # print(type(obj) == FoodConsumption)
     '''
