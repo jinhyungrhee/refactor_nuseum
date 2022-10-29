@@ -323,3 +323,16 @@ LOGGING = {
         },
     }
 }
+
+# ======================= RESULT IMAGES ==========================================
+image_file = os.path.join(BASE_DIR, 'images.json')
+
+with open(image_file, 'r', encoding='utf-8') as f: # 주의) utf-8 변환 필요!
+    images = json.loads(f.read())
+
+def get_images(setting):
+    try:
+        return images[setting]
+    except KeyError:
+        error_msg = "Set the {} environment variable".format(setting)
+        raise ImproperlyConfigured(error_msg)
