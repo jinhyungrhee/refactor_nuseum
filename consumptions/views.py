@@ -945,12 +945,15 @@ class AdminDayView(APIView):
   def get(self, request):
     author_string = self.request.GET.get('author', None)
     if author_string is None:
-      data = {
-        'error_msg' : '올바른 사용자 코드를 입력하세요.'
-      }
-      return Response(status=status.HTTP_404_NOT_FOUND, data=data)
-    author = User.objects.get(username=author_string)
-    # print(f"AUTHOR : {author}")
+      author = self.request.user
+    else:
+      author = User.objects.get(username=author_string)
+    # if author_string is None:
+    #   data = {
+    #     'error_msg' : '올바른 사용자 코드를 입력하세요.'
+    #   }
+    #   return Response(status=status.HTTP_404_NOT_FOUND, data=data)
+    # author = User.objects.get(username=author_string)
 
     date = self.request.GET.get('date', None)
     int_date = convert_to_int_date(date)
@@ -961,6 +964,7 @@ class AdminDayView(APIView):
       return Response(status=status.HTTP_404_NOT_FOUND, data=data)
 
     date = datetime.fromtimestamp(int_date/1000)
+    nutrient = self.request.GET.get('nutrient', None) # nutrient 포함 여부
     # 아침/점심/저녁/간식 영양소
     food_posts = list(FoodPost.objects.filter(author=author, created_at=date).values('id'))
     day_food_data = FoodConsumption.objects.none() # 빈 쿼리셋 생성
@@ -969,10 +973,13 @@ class AdminDayView(APIView):
     # 물 정보 가져오기
     day_water_data = WaterPost.objects.filter(author=author, created_at=date)
     # 영양제 정보 가져오기
-    supplement_posts = SupplementPost.objects.filter(author=author, created_at=date)
-    day_supplement_data = SupplementConsumption.objects.none() # 빈 쿼리셋 생성
-    for i in range(len(supplement_posts)):
-      day_supplement_data |= supplement_posts[i].supplementconsumption_set.all()
+    if nutrient == 'yes':
+      supplement_posts = SupplementPost.objects.filter(author=author, created_at=date)
+      day_supplement_data = SupplementConsumption.objects.none() # 빈 쿼리셋 생성
+      for i in range(len(supplement_posts)):
+        day_supplement_data |= supplement_posts[i].supplementconsumption_set.all()
+    elif nutrient == 'no':
+      day_supplement_data = SupplementConsumption.objects.none() # 빈 쿼리셋 생성
 
     reporting_date = count_reporting_date(date, author, "day")
     sum_day_data = nutrient_calculator(day_food_data, day_supplement_data, day_water_data, reporting_date)
@@ -982,8 +989,13 @@ class AdminWeekView(APIView):
 
   def get(self, request):
     author_string = self.request.GET.get('author', None)
-    author = User.objects.get(username=author_string)
+    if author_string is None:
+      author = self.request.user
+    else:
+      author = User.objects.get(username=author_string)
+    # author = User.objects.get(username=author_string)
     date = self.request.GET.get('date', None)
+    nutrient = self.request.GET.get('nutrient', None) # nutrient 포함 여부
     today_date = datetime.fromtimestamp(int(date)/1000)
     a_week_ago = datetime.fromtimestamp((int(date) - 518400000)/1000)
     week_food_posts = FoodPost.objects.filter(author=author, created_at__lte=today_date, created_at__gte=a_week_ago).order_by('created_at')
@@ -991,10 +1003,13 @@ class AdminWeekView(APIView):
     for i in range(len(week_food_posts)):
       week_food_data |= week_food_posts[i].foodconsumption_set.all()
     
-    week_supplement_posts = SupplementPost.objects.filter(author=author, created_at__lte=today_date, created_at__gte=a_week_ago).order_by('created_at')
-    week_supplement_data = SupplementConsumption.objects.none() # 빈 쿼리셋 생성
-    for i in range(len(week_supplement_posts)):
-      week_supplement_data |= week_supplement_posts[i].supplementconsumption_set.all()
+    if nutrient == 'yes':
+      week_supplement_posts = SupplementPost.objects.filter(author=author, created_at__lte=today_date, created_at__gte=a_week_ago).order_by('created_at')
+      week_supplement_data = SupplementConsumption.objects.none() # 빈 쿼리셋 생성
+      for i in range(len(week_supplement_posts)):
+        week_supplement_data |= week_supplement_posts[i].supplementconsumption_set.all()
+    elif nutrient == 'no':
+      week_supplement_data = SupplementConsumption.objects.none() # 빈 쿼리셋 생성
 
     week_water_data = WaterPost.objects.filter(author=author, created_at__lte=today_date, created_at__gte=a_week_ago).order_by('created_at')
 
@@ -1007,8 +1022,13 @@ class AdminMonthView(APIView):
 
   def get(self, request):
     author_string = self.request.GET.get('author', None)
-    author = User.objects.get(username=author_string)
+    if author_string is None:
+      author = self.request.user
+    else:
+      author = User.objects.get(username=author_string)
+    # author = User.objects.get(username=author_string)
     date = self.request.GET.get('date', None)
+    nutrient = self.request.GET.get('nutrient', None) # nutrient 포함 여부
     today_date = datetime.fromtimestamp(int(date)/1000)
     a_week_ago = datetime.fromtimestamp((int(date) - 2592000000)/1000)
     month_food_posts = FoodPost.objects.filter(author=author, created_at__lte=today_date, created_at__gte=a_week_ago).order_by('created_at')
@@ -1016,10 +1036,13 @@ class AdminMonthView(APIView):
     for i in range(len(month_food_posts)):
       month_food_data |= month_food_posts[i].foodconsumption_set.all()
     
-    month_supplement_posts = SupplementPost.objects.filter(author=author, created_at__lte=today_date, created_at__gte=a_week_ago).order_by('created_at')
-    month_supplement_data = SupplementConsumption.objects.none() # 빈 쿼리셋 생성
-    for i in range(len(month_supplement_posts)):
-      month_supplement_data |= month_supplement_posts[i].supplementconsumption_set.all()
+    if nutrient == 'yes':
+      month_supplement_posts = SupplementPost.objects.filter(author=author, created_at__lte=today_date, created_at__gte=a_week_ago).order_by('created_at')
+      month_supplement_data = SupplementConsumption.objects.none() # 빈 쿼리셋 생성
+      for i in range(len(month_supplement_posts)):
+        month_supplement_data |= month_supplement_posts[i].supplementconsumption_set.all()
+    elif nutrient == 'no':
+      month_supplement_data = SupplementConsumption.objects.none() # 빈 쿼리셋 생성
 
     month_water_data = WaterPost.objects.filter(author=author, created_at__lte=today_date, created_at__gte=a_week_ago).order_by('created_at')
 
