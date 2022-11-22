@@ -170,7 +170,8 @@ CORS_ORIGIN_WHITELIST = [
                         'https://nuseum-fnqo.vercel.app',
                         'https://nuseum-admin.vercel.app',
                         'https://nuseum-test.vercel.app',
-                        'https://nuseum-git-test-parkjju.vercel.app']
+                        'https://nuseum-git-test-parkjju.vercel.app',
+                        'https://nuseum-admin-git-test-parkjju.vercel.app/']
 CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "config.urls"
