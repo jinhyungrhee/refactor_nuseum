@@ -7,8 +7,15 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Q
+# permission
+from rest_framework.permissions import AllowAny
 
 class FoodsView(APIView):
+
+  # permission
+  def get_permissions(self):
+    permission_classes = [AllowAny]
+    return [permission() for permission in permission_classes]
 
   def get(self, request):
     paginator =PageNumberPagination()
