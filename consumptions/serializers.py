@@ -18,6 +18,20 @@ class FoodPostImageSerializer(serializers.ModelSerializer):
 
 class FoodConsumptionSerializer(serializers.ModelSerializer):
   name = serializers.ReadOnlyField(source='food.name')
+  # 영양성분 필드 추가 *
+  energy = serializers.ReadOnlyField(source='food.energy')
+  protein = serializers.ReadOnlyField(source='food.protein')
+  fat = serializers.ReadOnlyField(source='food.fat')
+  carbohydrate = serializers.ReadOnlyField(source='food.carbohydrate')
+  dietary_fiber = serializers.ReadOnlyField(source='food.dietary_fiber')
+  magnesium = serializers.ReadOnlyField(source='food.magnesium')
+  vitamin_a = serializers.ReadOnlyField(source='food.vitamin_a')
+  vitamin_d = serializers.ReadOnlyField(source='food.vitamin_d')
+  vitamin_b6 = serializers.ReadOnlyField(source='food.vitamin_b6')
+  folic_acid = serializers.ReadOnlyField(source='food.folic_acid')
+  vitamin_b12 = serializers.ReadOnlyField(source='food.vitamin_b12')
+  tryptophan = serializers.ReadOnlyField(source='food.tryptophan')
+  dha_epa = serializers.ReadOnlyField(source='food.dha_epa')
   class Meta:
     model = FoodConsumption
     fields = '__all__'
@@ -75,6 +89,20 @@ class SupplementSerializer(serializers.ModelSerializer):
 
 # Supplement 수정
 class SupplementConsumptionSerializer(serializers.ModelSerializer):
+  # 영양성분 필드 추가 *
+  energy = serializers.ReadOnlyField(source='supplement.energy')
+  protein = serializers.ReadOnlyField(source='supplement.protein')
+  fat = serializers.ReadOnlyField(source='supplement.fat')
+  carbohydrate = serializers.ReadOnlyField(source='supplement.carbohydrate')
+  dietary_fiber = serializers.ReadOnlyField(source='supplement.dietary_fiber')
+  magnesium = serializers.ReadOnlyField(source='supplement.magnesium')
+  vitamin_a = serializers.ReadOnlyField(source='supplement.vitamin_a')
+  vitamin_d = serializers.ReadOnlyField(source='supplement.vitamin_d')
+  vitamin_b6 = serializers.ReadOnlyField(source='supplement.vitamin_b6')
+  folic_acid = serializers.ReadOnlyField(source='supplement.folic_acid')
+  vitamin_b12 = serializers.ReadOnlyField(source='supplement.vitamin_b12')
+  tryptophan = serializers.ReadOnlyField(source='supplement.tryptophan')
+  dha_epa = serializers.ReadOnlyField(source='supplement.dha_epa')
   class Meta:
     model = SupplementConsumption
     fields = '__all__'
