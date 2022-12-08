@@ -45,6 +45,7 @@ class Efood(models.Model):
   dha_epa = models.FloatField(default=0.0)
 
   classifier = models.IntegerField(default=0)
+  lang = models.CharField(max_length=30, default='test') # just for test(Efood)
 
   def __str__(self):
     return f'[{self.id}]{self.name} :: {self.category}'
