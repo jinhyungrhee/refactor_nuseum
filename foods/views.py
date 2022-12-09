@@ -39,12 +39,12 @@ class FoodsView(APIView):
         if reg.match(search_query): # 검색어가 영어
           # 영문 DB에서 검색해서 기존 food DB와 연결
           #print(f'영어 : {search_query}')
-          efoods = Efood.objects.filter(Q(name__icontains=search_query)).order_by('classifier')
+          efoods = Food.objects.filter(Q(name__icontains=search_query) & Q(lang='eng')).order_by('classifier')
           results = paginator.paginate_queryset(efoods, request)
           serializer = EnglishFoodSerializer(results, many=True)
         else: # 검색어가 한글
           #print(f'한글 : {search_query}')
-          foods = Food.objects.filter(Q(name__icontains=search_query)).order_by('classifier', 'id')
+          foods = Food.objects.filter(Q(name__icontains=search_query) & Q(lang='ko')).order_by('classifier', 'id')
           results = paginator.paginate_queryset(foods, request)
           serializer = FoodSerializer(results, many=True)
         return paginator.get_paginated_response(data=serializer.data)
