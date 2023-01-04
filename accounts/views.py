@@ -119,6 +119,9 @@ class CustomLoginView(LoginView):
             from dj_rest_auth.jwt_auth import set_jwt_cookies
             set_jwt_cookies(response, self.access_token, self.refresh_token)
             # custom_set_jwt_cookies(response, self.access_token, self.refresh_token)
+        # login 완료 시 token에 gender, age 넣어주기
+        response.set_cookie(key='gender', value=self.request.user.gender)
+        response.set_cookie(key='age', value=self.request.user.age)
         return response
 
 # TOKEN

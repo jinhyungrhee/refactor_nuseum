@@ -16,6 +16,8 @@ from datetime import datetime
 from django.http import JsonResponse  
 
 class CustomRegisterSerializer(RegisterSerializer):
+  gender = serializers.CharField()
+  age = serializers.IntegerField()
 
   def validate_username(self, username):
         codes = ['사과', '오이', '호박', '당근' , '시금치', '열무' , '토란', '감자', '브로콜리', '양배추', '비트', '테스트1', '테스트2', '테스트3', '테스트4', '테스트5', 'nuseum',
@@ -26,10 +28,20 @@ class CustomRegisterSerializer(RegisterSerializer):
           raise serializers.ValidationError(_("올바른 코드를 입력하세요!"))
         return username
 
+  def custom_signup(self, request, user):
+        # validation
+        user.gender = request.POST.get("gender")
+        string_age = request.POST.get("age")
+        if string_age == None:
+            user.age = 0
+        else:
+            user.age = abs(int(string_age))
+        user.save()
+
 class UserSerializer(serializers.ModelSerializer):
   class Meta:
     model = User
-    fields = ['id', 'username', 'is_superuser']
+    fields = ['id', 'username', 'is_superuser', 'gender', 'age']
 
 class UserListSerializer(serializers.Serializer):
   userList = UserSerializer(many=True)
@@ -70,6 +82,10 @@ class UserDetailsSerializer(serializers.ModelSerializer):
             extra_fields.append('last_name')
         if hasattr(UserModel, 'is_superuser'): # 추가
             extra_fields.append('is_superuser')
+        if hasattr(UserModel, 'gender'): # 추가
+            extra_fields.append('gender')
+        if hasattr(UserModel, 'age'): # 추가
+            extra_fields.append('age')
         model = UserModel
         fields = ('pk', *extra_fields)
         read_only_fields = ('email',)
