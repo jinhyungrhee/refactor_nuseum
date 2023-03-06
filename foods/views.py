@@ -44,7 +44,13 @@ class FoodsView(APIView):
           serializer = EnglishFoodSerializer(results, many=True)
         else: # 검색어가 한글
           #print(f'한글 : {search_query}')
-          foods = Food.objects.filter(Q(name__icontains=search_query) & Q(lang='ko')).order_by('classifier', 'id')
+          # === 카테고리 추가 (23.03.06) ===
+          search_category = request.GET.get("cat", None)
+          # ===============================
+          if search_category != None:
+            foods = Food.objects.filter(Q(name__icontains=search_query) & Q(category__icontains=search_category) & Q(lang='ko')).order_by('classifier', 'id')
+          else: # TODO: 프론트엔드 로직 구현 완료되면 삭제 예정
+            foods = Food.objects.filter(Q(name__icontains=search_query) & Q(lang='ko')).order_by('classifier', 'id')
           results = paginator.paginate_queryset(foods, request)
           serializer = FoodSerializer(results, many=True)
         return paginator.get_paginated_response(data=serializer.data)
