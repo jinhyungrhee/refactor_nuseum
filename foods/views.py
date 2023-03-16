@@ -50,7 +50,8 @@ class FoodsView(APIView):
           if search_category != None:
             foods = Food.objects.filter(Q(name__icontains=search_query) & Q(category__icontains=search_category) & Q(lang='ko')).order_by('classifier', 'id')
           else: # TODO: 프론트엔드 로직 구현 완료되면 삭제 예정
-            foods = Food.objects.filter(Q(name__icontains=search_query) & Q(lang='ko')).order_by('classifier', 'id')
+            foods = Food.objects.filter(Q(name__istartswith=search_query) & Q(lang='ko')).order_by('classifier', 'id') # 검색 로직 임시 변경
+            # foods = Food.objects.filter(Q(name__icontains=search_query) & Q(lang='ko')).order_by('classifier', 'id')
           results = paginator.paginate_queryset(foods, request)
           serializer = FoodSerializer(results, many=True)
         return paginator.get_paginated_response(data=serializer.data)
