@@ -32,6 +32,8 @@ class FoodConsumptionSerializer(serializers.ModelSerializer):
   vitamin_b12 = serializers.ReadOnlyField(source='food.vitamin_b12')
   tryptophan = serializers.ReadOnlyField(source='food.tryptophan')
   dha_epa = serializers.ReadOnlyField(source='food.dha_epa')
+  # 카테고리 리스트 추가 (23.03.22)
+  category = serializers.ReadOnlyField(source='food.category')
   class Meta:
     model = FoodConsumption
     fields = '__all__'

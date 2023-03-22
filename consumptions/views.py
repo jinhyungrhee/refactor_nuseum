@@ -16,6 +16,10 @@ import copy
 import json
 
 MEAL_TYPE_LIST = ['breakfast', 'lunch', 'dinner', 'snack']
+# 카테고리 리스트 추가(23.03.22)
+CATEGORY_MAPPER = {'채소':1, '샐러드':1, '나물':1, '과일':2, '과실':2, '두부':3, '콩/두부':3, '두류':3, '두유':3, '메주':3, '된장':3, 
+                   '통곡물':4, '버섯':5, '해조류':6, '견과':7, '고기/생선/달걀':8, '육류':8, '난류':8, '수산물':8, '어패류':8, '회류':8, 
+                   '우유':9, '치즈':9, '유제품':9, '발효유':9, '가공유':9, '가공두유':9 }
 
 # FOOD
 # FOOD(TYPE&DATE) LIST
@@ -61,6 +65,13 @@ class FoodPostCreateAPIView(ListCreateAPIView):
             consumption_list.extend(food_serializer.data)
             image_list.extend(food_image_serializer.data)
 
+          # 카테고리 리스트 추가(23.03.22)
+          category_list = set([])
+          for elem in consumption_list:
+            for index, (key, val) in enumerate(CATEGORY_MAPPER.items()):
+              if key in elem.get('category'):
+                category_list.add(val)
+
           food_data = {
             'type' : queryset[0].type,
             'created_at' : queryset[0].created_at,
@@ -68,6 +79,7 @@ class FoodPostCreateAPIView(ListCreateAPIView):
             'author' : queryset[0].author.id,
             'data' : consumption_list,
             'images' : image_list,
+            'category' : category_list, # 카테고리 리스트 추가(23.03.22)
           }
         else:
           food_data = []
