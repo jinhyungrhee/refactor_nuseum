@@ -13,7 +13,8 @@ import jwt
 from django.conf import settings
 from multiprocessing import AuthenticationError
 from datetime import datetime
-from django.http import JsonResponse  
+from django.core.exceptions import ValidationError as DjangoValidationError
+from allauth.account.utils import setup_user_email
 
 class CustomRegisterSerializer(RegisterSerializer):
   gender = serializers.CharField()
@@ -32,15 +33,33 @@ class CustomRegisterSerializer(RegisterSerializer):
         '''
         return username
 
-  def custom_signup(self, request, user):
-        # validation
-        user.gender = request.POST.get("gender")
-        string_age = request.POST.get("age")
-        if string_age == None:
-            user.age = 0
-        else:
-            user.age = abs(int(string_age))
+  def get_cleaned_data(self):
+        return {
+            'username': self.validated_data.get('username', ''),
+            'password1': self.validated_data.get('password1', ''),
+            'email': self.validated_data.get('eamil', ''),
+            'gender': self.validated_data.get('gender', ''),
+            'age': self.validated_data.get('age', ''),
+        }
+
+  def save(self, request):
+        adapter = get_adapter()
+        user = adapter.new_user(request)
+        self.cleaned_data = self.get_cleaned_data()
+        user = adapter.save_user(request, user, self, commit=False)
+        if "password1" in self.cleaned_data:
+            try:
+                adapter.clean_password(self.cleaned_data['password1'], user=user)
+            except DjangoValidationError as exc:
+                raise serializers.ValidationError(
+                    detail=serializers.as_serializer_error(exc)
+            )
+        user.gender = self.cleaned_data.get('gender')
+        user.age = self.cleaned_data.get('age')
         user.save()
+        #self.custom_signup(request, user)
+        setup_user_email(request, user, [])
+        return user
 
 class UserSerializer(serializers.ModelSerializer):
   class Meta:
